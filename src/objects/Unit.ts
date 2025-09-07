@@ -1,3 +1,5 @@
+// src/objects/Unit.ts
+
 import Phaser from 'phaser';
 import { Enemy } from './Enemy';
 import { Projectile } from './Projectile';
@@ -21,6 +23,11 @@ export class Unit extends Phaser.GameObjects.Arc {
     }
 
     update(dt: number, enemies: Enemy[], projectiles: Projectile[]) {
+        // 씬이 이미 파괴/비활성 상태면 아무것도 하지 않음
+        // (재시작 직후 남아 있는 콜백이 도는 경우 방어)
+        // @ts-ignore
+        if (!this.scene || !this.scene.sys || !this.scene.sys.isActive) return;
+
         this.timeSinceAttack += dt;
         this.targetStick = Math.max(0, this.targetStick - dt);
 
@@ -48,6 +55,10 @@ export class Unit extends Phaser.GameObjects.Arc {
     }
 
     private shoot(projectiles: Projectile[], target: Enemy) {
+        // 씬 유효성 재확인
+        // @ts-ignore
+        if (!this.scene || !this.scene.sys || !this.scene.sys.isActive) return;
+
         const p = new Projectile(this.scene, this.x, this.y, this.atk, 600, target);
         const dx = target.x - this.x, dy = target.y - this.y;
         const dist = Math.hypot(dx, dy) || 1;
