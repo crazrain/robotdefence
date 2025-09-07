@@ -1,27 +1,44 @@
 export const GAME_WIDTH = 720;
 export const GAME_HEIGHT = 1280;
 
-export const MAX_ALIVE = 100;           // 필드 적 한계
-export const BASE_HP = 100;             // 웨이브 체력 기준
-export const SUMMON_COST = 100;         // 유닛 소환 비용
+export const MAX_ALIVE = 100;
+export const BASE_HP = 100;
+export const SUMMON_COST = 100;
 
-// 보상 관련(원하시는 값으로 조정 가능)
-export const GOLD_PER_HP = 1;        // 적 1 최대 HP 당 골드(예: HP 200 → 10골드)
-export const WAVE_CLEAR_BASE = 80;      // 웨이브 클리어 기본 보상
-export const WAVE_CLEAR_GROWTH = 0.3;   // 웨이브당 30% 증가(지수 성장)
+// 보상
+export const GOLD_PER_HP = 0.05;
+export const WAVE_CLEAR_BASE = 80;
+export const WAVE_CLEAR_GROWTH = 0.3;
 
-// 아래(하단) 루프 사각형
+// 하단 루프 사각형
 export const LOOP_RECT_BOTTOM = {
     left: 100, right: 620, top: 680, bottom: 980
 };
 
-// 위(상단) 루프 사각형
+// 상단 루프 사각형(참고용/2P 예정)
 export const LOOP_RECT_TOP = {
     left: 100, right: 620, top: 260, bottom: 560
 };
 
-// 자리(스폰 구멍): 위(P2), 아래(P1) — 각 루프의 좌상 꼭짓점 바깥
+// 스폰 자리(네트워크 대비용)
 export const SEAT = {
     top:   { x: LOOP_RECT_TOP.left,    y: LOOP_RECT_TOP.top - 80 },
     bottom:{ x: LOOP_RECT_BOTTOM.left, y: LOOP_RECT_BOTTOM.bottom + 80 }
+};
+
+// 하단 그리드 설정(정밀 정렬용)
+export const GRID_PARAMS = {
+    cols: 7,          // 열 수
+    rows: 4,          // 행 수
+    paddingX: 24,     // 사각형 안쪽 여백(좌우)
+    paddingY: 24,     // 사각형 안쪽 여백(상하)
+    gapX: 0,          // 셀 사이 가로 간격(선호: 0)
+    gapY: 0           // 셀 사이 세로 간격(선호: 0)
+};
+
+// 근접 영웅 기본(예시)
+export const MELEE_DEFAULT = {
+    atk: 35,
+    atkInterval: 0.45,
+    range: 80     // 짧은 사거리(셀 1~1.5칸 정도)
 };
