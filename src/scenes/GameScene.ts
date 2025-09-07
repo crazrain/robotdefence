@@ -189,24 +189,18 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-// GameScene.ts 안
-
     private gameOver(reason: string) {
-        // 씬을 멈춰도 전역 InputManager를 쓸 것이므로 pause 유지 가능
         this.scene.pause();
 
-        const bg = this.add.rectangle(
-            GAME_WIDTH / 2, GAME_HEIGHT / 2, 560, 360, 0x000000, 0.7
-        ).setDepth(1000);
-        const txt = this.add.text(
-            GAME_WIDTH / 2, GAME_HEIGHT / 2,
+        const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 560, 360, 0x000000, 0.7).setDepth(1000);
+        const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2,
             `게임 오버\n${reason}\n탭(또는 스페이스)하면 재시작`,
             { color: '#fff', fontSize: '32px', fontFamily: 'monospace', align: 'center' }
         ).setOrigin(0.5).setDepth(1001);
 
         const restart = () => {
-            // 리스너 중복 방지
-            this.input.manager.off('pointerdown', restart);
+            // 리스너 해제
+            this.input.manager.events.off('pointerdown', restart);
             this.input.keyboard?.off('keydown-SPACE', restart);
             this.input.keyboard?.off('keydown-ENTER', restart);
 
@@ -216,10 +210,8 @@ export class GameScene extends Phaser.Scene {
             this.scene.restart();
         };
 
-        // 전역 입력 매니저: 씬이 pause여도 동작
-        this.input.manager.once('pointerdown', restart);
-
-        // 키보드도 허용(선택)
+        // 전역 InputManager의 EventEmitter에 바인딩
+        this.input.manager.events.once('pointerdown', restart);
         this.input.keyboard?.once('keydown-SPACE', restart);
         this.input.keyboard?.once('keydown-ENTER', restart);
     }
@@ -227,17 +219,14 @@ export class GameScene extends Phaser.Scene {
     private winGame() {
         this.scene.pause();
 
-        const bg = this.add.rectangle(
-            GAME_WIDTH / 2, GAME_HEIGHT / 2, 560, 300, 0x000000, 0.7
-        ).setDepth(1000);
-        const txt = this.add.text(
-            GAME_WIDTH / 2, GAME_HEIGHT / 2,
+        const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 560, 300, 0x000000, 0.7).setDepth(1000);
+        const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2,
             '클리어!\n탭(또는 스페이스)하면 재시작',
             { color: '#fff', fontSize: '36px', fontFamily: 'monospace', align: 'center' }
         ).setOrigin(0.5).setDepth(1001);
 
         const restart = () => {
-            this.input.manager.off('pointerdown', restart);
+            this.input.manager.events.off('pointerdown', restart);
             this.input.keyboard?.off('keydown-SPACE', restart);
             this.input.keyboard?.off('keydown-ENTER', restart);
 
@@ -247,7 +236,7 @@ export class GameScene extends Phaser.Scene {
             this.scene.restart();
         };
 
-        this.input.manager.once('pointerdown', restart);
+        this.input.manager.events.once('pointerdown', restart);
         this.input.keyboard?.once('keydown-SPACE', restart);
         this.input.keyboard?.once('keydown-ENTER', restart);
     }
