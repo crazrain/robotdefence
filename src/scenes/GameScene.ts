@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, MAX_ALIVE, SUMMON_COST, LOOP_RECT_BOTTOM, LOOP_RECT_TOP } from '../core/constants';
+import { GAME_WIDTH, GAME_HEIGHT, MAX_ALIVE, SUMMON_COST, LOOP_RECT_BOTTOM, LOOP_RECT_TOP, WAVE_CLEAR_BASE, WAVE_CLEAR_GROWTH } from '../core/constants';
 import { buildBottomLoop, buildTopLoop } from '../core/Path';
 import type { Mode } from '../core/types';
 import { Enemy } from '../objects/Enemy';
@@ -11,7 +11,7 @@ import { SummonButton } from '../ui/SummonButton';
 import { Spawner } from '../systems/Spawner';
 import { WaveController } from '../systems/WaveController';
 import { Grid } from '../core/Grid';
-import { getDefaultConfig, type GameConfig, type Difficulty } from '../core/config';
+import { getDefaultConfig, type GameConfig } from '../core/config';
 import { RoundTimer } from '../systems/RoundTimer';
 
 export class GameScene extends Phaser.Scene {
@@ -35,7 +35,6 @@ export class GameScene extends Phaser.Scene {
     private bottomCells = Grid.buildBottomCells();
     private occupied = new Set<string>();
 
-    // 신규: 라운드 설정/타이머
     private cfg: GameConfig = getDefaultConfig('Normal');
     private round!: RoundTimer;
 
@@ -44,7 +43,7 @@ export class GameScene extends Phaser.Scene {
     create() {
         this.cameras.main.setBackgroundColor('#101018');
 
-        // (디버그 라인 생략 가능) 상/하단 루프 그리기
+        // 루프 디버그(생략 가능)
         for (let i = 0; i < this.waypointsTop.length; i++) {
             const a = this.waypointsTop[i];
             const b = this.waypointsTop[(i + 1) % this.waypointsTop.length];
@@ -56,8 +55,8 @@ export class GameScene extends Phaser.Scene {
             this.add.line(0, 0, a.x, a.y, b.x, b.y, 0x334455).setOrigin(0).setLineWidth(3);
         }
 
-        // 라운드 타이머 생성(난이도별 설정)
-        this.cfg = getDefaultConfig('Normal');         // 난이도 선택 UI 연결 가능
+        // 라운드 타이머
+        this.cfg = getDefaultConfig('Normal');
         this.round = new RoundTimer(this.cfg.roundTimeLimitSec);
         this.round.start();
 
@@ -73,8 +72,19 @@ export class GameScene extends Phaser.Scene {
             this.cfg,
             (reason) => this.gameOver(reason),
             () => {},
-            () => this.winGame()
+            () => this.winGame(),
+            (waveIndex) => this.grantWaveClearGold(waveIndex)   // ← 웨이브 클리어 보상
         );
+
+        // 적 처치 이벤트 수신 → 골드 지급
+        this.events.on('enemy_killed', (payload: { x: number; y: number; maxHp: number; bounty: number }) => {
+            this.gold += payload.bounty;
+            // 작은 +골드 이펙트
+            const t = this.add.text(payload.x, payload.y - 18, `+${payload.bounty}`, {
+                color: '#ffd54f', fontSize: '18px', fontFamily: 'monospace'
+            }).setOrigin(0.5).setDepth(20);
+            this.tweens.add({ targets: t, y: t.y - 20, alpha: 0, duration: 500, onComplete: () => t.destroy() });
+        });
 
         // 모드 선택 → 웨이브 시작
         this.modeSelector = new ModeSelector(this, (m) => {
@@ -113,18 +123,21 @@ export class GameScene extends Phaser.Scene {
         // 웨이브
         this.waves.update(dt, this.mode, this.enemies);
 
-        // HUD: 라운드 남은 시간 표시 추가
-        this.hud.update(
-            this.gold,
-            this.units.length,
-            this.enemies.length,
-            MAX_ALIVE,
-            this.waves,
-            this.mode,
-            this.round.remaining // ← 추가
-        );
+        // HUD
+        this.hud.update(this.gold, this.units.length, this.enemies.length, MAX_ALIVE, this.waves, this.mode, this.round.remaining);
     }
 
+    // 웨이브 클리어 보상 계산/지급
+    private grantWaveClearGold(waveIndex: number) {
+        const bonus = Math.max(
+            1,
+            Math.floor(WAVE_CLEAR_BASE * Math.pow(1 + WAVE_CLEAR_GROWTH, waveIndex))
+        );
+        this.gold += bonus;
+        this.toast(`웨이브 클리어 보상 +${bonus}`, '#77ff77');
+    }
+
+    // 격자 스냅 유닛 소환
     private trySummonUnitOnGrid() {
         if (this.gold < SUMMON_COST) {
             this.toast('골드가 부족합니다', '#ff7777');
@@ -153,7 +166,6 @@ export class GameScene extends Phaser.Scene {
         this.gridGfx.clear();
         const b = LOOP_RECT_BOTTOM;
         this.gridGfx.lineStyle(2, 0x66aa66, 0.8).strokeRect(b.left, b.top, b.right - b.left, b.bottom - b.top);
-
         const t = LOOP_RECT_TOP;
         this.gridGfx.lineStyle(2, 0x6688aa, 0.5).strokeRect(t.left, t.top, t.right - t.left, t.bottom - t.top);
 
@@ -177,29 +189,66 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    private gameOver(reason: string) {
-        this.scene.pause();
-        const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 560, 360, 0x000000, 0.7).setDepth(1000);
-        const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, `게임 오버\n${reason}\n탭하면 재시작`, {
-            color: '#fff', fontSize: '32px', fontFamily: 'monospace', align: 'center'
-        }).setOrigin(0.5).setDepth(1001);
+// GameScene.ts 안
 
-        this.input.once('pointerdown', () => {
-            bg.destroy(); txt.destroy();
+    private gameOver(reason: string) {
+        // 씬을 멈춰도 전역 InputManager를 쓸 것이므로 pause 유지 가능
+        this.scene.pause();
+
+        const bg = this.add.rectangle(
+            GAME_WIDTH / 2, GAME_HEIGHT / 2, 560, 360, 0x000000, 0.7
+        ).setDepth(1000);
+        const txt = this.add.text(
+            GAME_WIDTH / 2, GAME_HEIGHT / 2,
+            `게임 오버\n${reason}\n탭(또는 스페이스)하면 재시작`,
+            { color: '#fff', fontSize: '32px', fontFamily: 'monospace', align: 'center' }
+        ).setOrigin(0.5).setDepth(1001);
+
+        const restart = () => {
+            // 리스너 중복 방지
+            this.input.manager.off('pointerdown', restart);
+            this.input.keyboard?.off('keydown-SPACE', restart);
+            this.input.keyboard?.off('keydown-ENTER', restart);
+
+            bg.destroy();
+            txt.destroy();
+
             this.scene.restart();
-        });
+        };
+
+        // 전역 입력 매니저: 씬이 pause여도 동작
+        this.input.manager.once('pointerdown', restart);
+
+        // 키보드도 허용(선택)
+        this.input.keyboard?.once('keydown-SPACE', restart);
+        this.input.keyboard?.once('keydown-ENTER', restart);
     }
 
     private winGame() {
         this.scene.pause();
-        const bg = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 560, 300, 0x000000, 0.7).setDepth(1000);
-        const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, '클리어!\n탭하면 재시작', {
-            color: '#fff', fontSize: '36px', fontFamily: 'monospace', align: 'center'
-        }).setOrigin(0.5).setDepth(1001);
 
-        this.input.once('pointerdown', () => {
-            bg.destroy(); txt.destroy();
+        const bg = this.add.rectangle(
+            GAME_WIDTH / 2, GAME_HEIGHT / 2, 560, 300, 0x000000, 0.7
+        ).setDepth(1000);
+        const txt = this.add.text(
+            GAME_WIDTH / 2, GAME_HEIGHT / 2,
+            '클리어!\n탭(또는 스페이스)하면 재시작',
+            { color: '#fff', fontSize: '36px', fontFamily: 'monospace', align: 'center' }
+        ).setOrigin(0.5).setDepth(1001);
+
+        const restart = () => {
+            this.input.manager.off('pointerdown', restart);
+            this.input.keyboard?.off('keydown-SPACE', restart);
+            this.input.keyboard?.off('keydown-ENTER', restart);
+
+            bg.destroy();
+            txt.destroy();
+
             this.scene.restart();
-        });
+        };
+
+        this.input.manager.once('pointerdown', restart);
+        this.input.keyboard?.once('keydown-SPACE', restart);
+        this.input.keyboard?.once('keydown-ENTER', restart);
     }
 }
