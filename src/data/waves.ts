@@ -1,11 +1,4 @@
-// 웨이브 데이터 예시
-export type WaveDef = {
-    durationSeconds: number; // 웨이브 제한 시간(초)
-    topCount: number;        // 위쪽 자리(P2) 소환 수
-    bottomCount: number;     // 아래쪽 자리(P1) 소환 수
-    hpScale: number;
-    speed: number;
-};
+import type { WaveDef } from '../core/types';
 
 export const Waves: WaveDef[] = [
     { durationSeconds: 20, topCount: 8,  bottomCount: 8,  hpScale: 1.00, speed: 80  },
