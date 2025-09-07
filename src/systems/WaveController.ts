@@ -4,6 +4,7 @@ import { Waves } from '../data/waves';
 import { MAX_ALIVE } from '../core/constants';
 import { Spawner } from './Spawner';
 import { Enemy } from '../objects/Enemy';
+import type { GameConfig } from '../core/config';
 
 export class WaveController {
     waves: WaveDef[] = Waves;
@@ -12,28 +13,35 @@ export class WaveController {
     onGameOver: (reason: string) => void;
     onWaveChange: () => void;
     onWin: () => void;
+    cfg: GameConfig;
 
     constructor(
         private scene: Phaser.Scene,
         spawner: Spawner,
+        cfg: GameConfig,
         onGameOver: (reason: string) => void,
         onWaveChange: () => void,
         onWin: () => void
     ) {
         this.spawner = spawner;
+        this.cfg = cfg;
         this.onGameOver = onGameOver;
         this.onWaveChange = onWaveChange;
         this.onWin = onWin;
     }
 
-    start(mode: Mode, index = 0) {
-        const w = this.waves[index];
+    start(_mode: Mode, index = 0) {
+        const base = this.waves[index];
+        const w: WaveDef = {
+            ...base,
+            durationSeconds: Math.max(1, base.durationSeconds * (this.cfg.waveDurationScale ?? 1))
+        };
         this.rt = {
             index,
             timeLeft: w.durationSeconds,
-            topToSpawn: mode === 'duo' ? w.topCount : 0,
+            topToSpawn: 0, // 현 요구사항: 항상 P1(하단)만 스폰
             bottomToSpawn: w.bottomCount,
-            spawnIntervalTop: w.topCount > 0 ? w.durationSeconds / (mode === 'duo' ? w.topCount : 1) : 0,
+            spawnIntervalTop: 0,
             spawnIntervalBottom: w.bottomCount > 0 ? w.durationSeconds / w.bottomCount : 0,
             spawnTimerTop: 0,
             spawnTimerBottom: 0,
@@ -41,21 +49,12 @@ export class WaveController {
         this.onWaveChange();
     }
 
-    update(dt: number, mode: Mode, enemies: Enemy[]) {
+    update(dt: number, _mode: Mode, enemies: Enemy[]) {
         if (!this.rt) return;
         const w = this.waves[this.rt.index];
         this.rt.timeLeft = Math.max(0, this.rt.timeLeft - dt);
 
-        // 스폰 타이밍
-        if (this.rt.topToSpawn > 0 && this.rt.spawnIntervalTop > 0) {
-            this.rt.spawnTimerTop += dt;
-            while (this.rt.topToSpawn > 0 && this.rt.spawnTimerTop >= this.rt.spawnIntervalTop) {
-                this.rt.spawnTimerTop -= this.rt.spawnIntervalTop;
-                this.spawner.spawnTop(w, enemies);
-                this.rt.topToSpawn--;
-            }
-        }
-
+        // 하단(P1) 스폰
         if (this.rt.bottomToSpawn > 0 && this.rt.spawnIntervalBottom > 0) {
             this.rt.spawnTimerBottom += dt;
             while (this.rt.bottomToSpawn > 0 && this.rt.spawnTimerBottom >= this.rt.spawnIntervalBottom) {
@@ -65,27 +64,35 @@ export class WaveController {
             }
         }
 
-        // 패배 조건: 필드 100 마리
+        // 필드 과포화 패배
         if (enemies.length >= MAX_ALIVE) {
             this.onGameOver('적이 너무 많이 쌓였습니다(100 마리).');
             return;
         }
 
-        const allSpawned = this.rt.topToSpawn === 0 && this.rt.bottomToSpawn === 0;
+        const allSpawned = this.rt.bottomToSpawn === 0;
 
-        // 시간 종료
+        // 웨이브 시간 종료 시의 처리 정책
         if (this.rt.timeLeft <= 0) {
-            if (enemies.length > 0) {
-                this.onGameOver('시간 내에 처치하지 못했습니다.');
+            if (this.cfg.useWaveTimeoutFail) {
+                if (enemies.length > 0) {
+                    this.onGameOver('웨이브 제한 시간 내에 처치하지 못했습니다.');
+                    return;
+                }
+                this.nextOrWin(_mode);
                 return;
             }
-            this.nextOrWin(mode);
+            // useWaveTimeoutFail=false: 웨이브 시간은 스폰 페이싱만 담당.
+            // 스폰이 모두 끝났고 적이 0이면 다음 웨이브로 진행.
+            if (allSpawned && enemies.length === 0) {
+                this.nextOrWin(_mode);
+            }
             return;
         }
 
         // 스폰 완료 후 전멸 시 조기 진행
         if (allSpawned && enemies.length === 0) {
-            this.nextOrWin(mode);
+            this.nextOrWin(_mode);
         }
     }
 

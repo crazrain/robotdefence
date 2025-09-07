@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, MAX_ALIVE, SUMMON_COST } from '../core/constants';
-import { buildLoopWaypoints } from '../core/Path';
+import { GAME_WIDTH, GAME_HEIGHT, MAX_ALIVE, SUMMON_COST, LOOP_RECT_BOTTOM, LOOP_RECT_TOP } from '../core/constants';
+import { buildBottomLoop, buildTopLoop } from '../core/Path';
 import type { Mode } from '../core/types';
 import { Enemy } from '../objects/Enemy';
 import { Unit } from '../objects/Unit';
@@ -10,9 +10,13 @@ import { ModeSelector } from '../ui/ModeSelector';
 import { SummonButton } from '../ui/SummonButton';
 import { Spawner } from '../systems/Spawner';
 import { WaveController } from '../systems/WaveController';
+import { Grid } from '../core/Grid';
+import { getDefaultConfig, type GameConfig, type Difficulty } from '../core/config';
+import { RoundTimer } from '../systems/RoundTimer';
 
 export class GameScene extends Phaser.Scene {
-    waypoints = buildLoopWaypoints();
+    waypointsTop = buildTopLoop();
+    waypointsBottom = buildBottomLoop();
 
     enemies: Enemy[] = [];
     units: Unit[] = [];
@@ -26,79 +30,138 @@ export class GameScene extends Phaser.Scene {
     gold = 200;
     mode: Mode = 'solo';
 
+    private gridGfx?: Phaser.GameObjects.Graphics;
+    private gridDebug = true;
+    private bottomCells = Grid.buildBottomCells();
+    private occupied = new Set<string>();
+
+    // 신규: 라운드 설정/타이머
+    private cfg: GameConfig = getDefaultConfig('Normal');
+    private round!: RoundTimer;
+
     constructor() { super('GameScene'); }
 
     create() {
         this.cameras.main.setBackgroundColor('#101018');
 
-        // 경로 디버그 라인
-        for (let i = 0; i < this.waypoints.length; i++) {
-            const a = this.waypoints[i];
-            const b = this.waypoints[(i + 1) % this.waypoints.length];
-            const line = this.add.line(0, 0, a.x, a.y, b.x, b.y, 0x333355).setOrigin(0);
-            line.setLineWidth(3);
+        // (디버그 라인 생략 가능) 상/하단 루프 그리기
+        for (let i = 0; i < this.waypointsTop.length; i++) {
+            const a = this.waypointsTop[i];
+            const b = this.waypointsTop[(i + 1) % this.waypointsTop.length];
+            this.add.line(0, 0, a.x, a.y, b.x, b.y, 0x224488).setOrigin(0).setLineWidth(3);
         }
+        for (let i = 0; i < this.waypointsBottom.length; i++) {
+            const a = this.waypointsBottom[i];
+            const b = this.waypointsBottom[(i + 1) % this.waypointsBottom.length];
+            this.add.line(0, 0, a.x, a.y, b.x, b.y, 0x334455).setOrigin(0).setLineWidth(3);
+        }
+
+        // 라운드 타이머 생성(난이도별 설정)
+        this.cfg = getDefaultConfig('Normal');         // 난이도 선택 UI 연결 가능
+        this.round = new RoundTimer(this.cfg.roundTimeLimitSec);
+        this.round.start();
 
         // HUD
         this.hud = new HUD(this);
         this.hud.create();
 
         // 시스템
-        this.spawner = new Spawner(this, this.waypoints);
+        this.spawner = new Spawner(this, this.waypointsTop, this.waypointsBottom);
         this.waves = new WaveController(
             this,
             this.spawner,
+            this.cfg,
             (reason) => this.gameOver(reason),
-            () => {},            // wave change hook(필요시 연출 추가 지점)
+            () => {},
             () => this.winGame()
         );
 
-        // 모드 선택 오버레이
+        // 모드 선택 → 웨이브 시작
         this.modeSelector = new ModeSelector(this, (m) => {
             this.mode = m;
             this.waves.start(this.mode, 0);
         });
         this.modeSelector.show();
 
-        // 소환 버튼(정적 임포트로 변경)
-        new SummonButton(this, () => this.trySummonUnit()).create();
+        // 소환 버튼(유닛: 격자 스냅)
+        new SummonButton(this, () => this.trySummonUnitOnGrid()).create();
+
+        // 디버그 격자
+        if (this.gridDebug) {
+            this.gridGfx = this.add.graphics().setDepth(2);
+            this.drawGridDebug();
+        }
     }
 
     update(_: number, delta: number) {
         const dt = delta / 1000;
 
-        // 유닛
-        for (const u of this.units) u.update(dt, this.enemies, this.projectiles);
+        // 라운드 타이머
+        this.round.update(dt);
+        if (this.round.expired) {
+            this.gameOver('라운드 제한 시간 초과');
+            return;
+        }
 
-        // 적
+        // 유닛/적/투사체
+        for (const u of this.units) u.update(dt, this.enemies, this.projectiles);
         for (const e of this.enemies) e.update(dt);
         this.enemies = this.enemies.filter(e => e.alive);
-
-        // 투사체
         this.projectiles = this.projectiles.filter(p => p.alive);
         for (const p of this.projectiles) p.update(dt);
 
         // 웨이브
         this.waves.update(dt, this.mode, this.enemies);
 
-        // HUD
-        this.hud.update(this.gold, this.units.length, this.enemies.length, MAX_ALIVE, this.waves, this.mode);
+        // HUD: 라운드 남은 시간 표시 추가
+        this.hud.update(
+            this.gold,
+            this.units.length,
+            this.enemies.length,
+            MAX_ALIVE,
+            this.waves,
+            this.mode,
+            this.round.remaining // ← 추가
+        );
     }
 
-    private trySummonUnit() {
+    private trySummonUnitOnGrid() {
         if (this.gold < SUMMON_COST) {
             this.toast('골드가 부족합니다', '#ff7777');
             return;
         }
+        const freeCells = this.bottomCells.filter(c => !this.occupied.has(`${c.col},${c.row}`));
+        if (freeCells.length === 0) {
+            this.toast('배치 가능한 자리가 없습니다', '#ff7777');
+            return;
+        }
+        const pick = freeCells[(Math.random() * freeCells.length) | 0];
+        const key = `${pick.col},${pick.row}`;
+
         this.gold -= SUMMON_COST;
-        const x = Phaser.Math.Between(160, GAME_WIDTH - 160);
-        const y = Phaser.Math.Between(420, GAME_HEIGHT - 420);
-        const unit = new Unit(this, x, y, 20, 0.6, 180);
+        const unit = new Unit(this, pick.x, pick.y, 20, 0.6, 180);
         unit.setDepth(5);
         this.units.push(unit);
+        this.occupied.add(key);
 
-        const fx = this.add.circle(x, y, 4, 0x99ddff).setAlpha(0.8);
+        const fx = this.add.circle(pick.x, pick.y, 4, 0x99ddff).setAlpha(0.8);
         this.tweens.add({ targets: fx, radius: 40, alpha: 0, duration: 250, onComplete: () => fx.destroy() });
+    }
+
+    private drawGridDebug() {
+        if (!this.gridGfx) return;
+        this.gridGfx.clear();
+        const b = LOOP_RECT_BOTTOM;
+        this.gridGfx.lineStyle(2, 0x66aa66, 0.8).strokeRect(b.left, b.top, b.right - b.left, b.bottom - b.top);
+
+        const t = LOOP_RECT_TOP;
+        this.gridGfx.lineStyle(2, 0x6688aa, 0.5).strokeRect(t.left, t.top, t.right - t.left, t.bottom - t.top);
+
+        const size = Grid.CELL_SIZE;
+        this.gridGfx.lineStyle(1, 0x336633, 0.5);
+        for (const c of this.bottomCells) {
+            this.gridGfx.strokeRect(c.x - size / 2, c.y - size / 2, size, size);
+        }
     }
 
     private toast(msg: string, color = '#ffeb3b') {
@@ -123,7 +186,7 @@ export class GameScene extends Phaser.Scene {
 
         this.input.once('pointerdown', () => {
             bg.destroy(); txt.destroy();
-            this.scene.restart(); // 초기화
+            this.scene.restart();
         });
     }
 
