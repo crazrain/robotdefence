@@ -25,10 +25,13 @@ import {
     type GridCell,
     type GridMetrics,
     pickRandomFreeCell,
-    keyOf
+    keyOf,
+    worldToCell,
+    cellToWorld
 } from '../core/Grid';
 import { getDefaultConfig, type GameConfig } from '../core/config';
 import { RoundTimer } from '../systems/RoundTimer';
+import { Hero } from '../objects/Hero';
 
 export class GameScene extends Phaser.Scene {
     // 경로(상·하 루프)
@@ -39,6 +42,7 @@ export class GameScene extends Phaser.Scene {
     enemies: Enemy[] = [];
     units: Unit[] = [];
     projectiles: Projectile[] = [];
+    hero: Hero | null = null;
 
     // 시스템/뷰
     hud!: HUD;
@@ -142,7 +146,7 @@ export class GameScene extends Phaser.Scene {
         this.modeSelector.show();
 
         // 유닛 소환(그리드 스냅)
-        new SummonButton(this, () => this.trySummonUnitOnGrid()).create();
+        new SummonButton(this, () => this.trySummonHero()).create();
 
         // 디버그 격자 시각화
         if (this.gridDebug) {
@@ -153,6 +157,43 @@ export class GameScene extends Phaser.Scene {
         // 라이프사이클 훅(자동 정리)
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
         this.events.once(Phaser.Scenes.Events.DESTROY, () => this.cleanup(true));
+
+        // 드래그 앤 드롭
+        this.input.on('dragstart', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
+            if (gameObject instanceof Hero) {
+                const cell = worldToCell(gameObject.x, gameObject.y, this.gridMetrics);
+                if (cell) {
+                    this.occupied.delete(keyOf(cell.col, cell.row));
+                }
+            }
+        });
+
+        this.input.on('drag', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, dragX: number, dragY: number) => {
+            if (gameObject instanceof Hero) {
+                gameObject.x = dragX;
+                gameObject.y = dragY;
+            }
+        });
+
+        this.input.on('dragend', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
+            if (gameObject instanceof Hero) {
+                const cell = worldToCell(gameObject.x, gameObject.y, this.gridMetrics);
+                if (cell && !this.occupied.has(keyOf(cell.col, cell.row))) {
+                    const { x, y } = cellToWorld(cell.col, cell.row, this.gridMetrics);
+                    gameObject.x = x;
+                    gameObject.y = y;
+                    this.occupied.add(keyOf(cell.col, cell.row));
+                } else {
+                    // 이전 위치로 복귀
+                    const pick = pickRandomFreeCell(this.gridCells, this.occupied);
+                    if (pick) {
+                        gameObject.x = pick.x;
+                        gameObject.y = pick.y;
+                        this.occupied.add(keyOf(pick.col, pick.row));
+                    }
+                }
+            }
+        });
     }
 
     update(_: number, delta: number) {
@@ -170,6 +211,9 @@ export class GameScene extends Phaser.Scene {
 
         // 유닛/적/투사체
         for (const u of this.units) u.update(dt, this.enemies, this.projectiles);
+        if (this.hero) {
+            this.hero.update(dt, this.enemies, this.projectiles);
+        }
         for (const e of this.enemies) e.update(dt);
         this.enemies = this.enemies.filter((e) => e.alive);
         this.projectiles = this.projectiles.filter((p) => p.alive);
@@ -181,7 +225,7 @@ export class GameScene extends Phaser.Scene {
         // HUD
         this.hud.update(
             this.gold,
-            this.units.length,
+            this.units.length + (this.hero ? 1 : 0),
             this.enemies.length,
             MAX_ALIVE,
             this.waves,
@@ -199,7 +243,11 @@ export class GameScene extends Phaser.Scene {
         this.occupied.clear();
     }
 
-    private trySummonUnitOnGrid() {
+    private trySummonHero() {
+        if (this.hero) {
+            this.toast('영웅은 한 명만 소환할 수 있습니다', '#ff7777');
+            return;
+        }
         if (this.gold < SUMMON_COST) {
             this.toast('골드가 부족합니다', '#ff7777');
             return;
@@ -212,10 +260,8 @@ export class GameScene extends Phaser.Scene {
 
         this.gold -= SUMMON_COST;
 
-        // TODO: 근접/원거리 타입 분기는 향후 UI/가챠와 연동
-        const unit = new Unit(this, pick.x, pick.y, 20, 0.6, 180);
-        unit.setDepth(5);
-        this.units.push(unit);
+        this.hero = new Hero(this, pick.x, pick.y, 30, 0.5, 200);
+        this.hero.setDepth(5);
         this.occupied.add(keyOf(pick.col, pick.row));
 
         const fx = this.add.circle(pick.x, pick.y, 4, 0x99ddff).setAlpha(0.8);
@@ -350,6 +396,10 @@ export class GameScene extends Phaser.Scene {
         this.units.forEach((u) => u.destroy());
         this.enemies.forEach((e) => e.destroy());
         this.projectiles.forEach((p) => p.destroy());
+        if (this.hero) {
+            this.hero.destroy();
+            this.hero = null;
+        }
         this.units.length = 0;
         this.enemies.length = 0;
         this.projectiles.length = 0;
