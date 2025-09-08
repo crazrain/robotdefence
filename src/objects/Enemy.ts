@@ -25,6 +25,7 @@ export class Enemy extends Phaser.GameObjects.Arc {
 
         // 체력 바 초기화
         this.healthBar = scene.add.graphics();
+        this.healthBar.setDepth(1); // 몬스터보다 위에 표시되도록 z-index 설정
         this.updateHealthBar();
     }
 
@@ -77,7 +78,9 @@ export class Enemy extends Phaser.GameObjects.Arc {
         const barWidth = 32 * percentage; // 몬스터 너비에 맞춰 조절
 
         this.healthBar.fillStyle(0x000000, 0.5); // 배경
-        this.healthBar.fillRect(-16, -15, 32, 5); // 몬스터 위에 표시되도록 y 위치 조절
+        this.healthBar.fillRect(-16, -15, 32, 5);
+        this.healthBar.lineStyle(1, 0xffffff, 1); // 외곽선 추가 (흰색)
+        this.healthBar.strokeRect(-16, -15, 32, 5);
 
         this.healthBar.fillStyle(color, 1);
         this.healthBar.fillRect(-16, -15, barWidth, 5);
