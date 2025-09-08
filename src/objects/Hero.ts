@@ -8,6 +8,5 @@ export class Hero extends Unit {
         super(scene, x, y, atk, atkInterval, range);
         this.setFillStyle(0xffd700, 1); // Gold color for the hero
         this.setInteractive();
-        scene.input.setDraggable(this);
     }
 }

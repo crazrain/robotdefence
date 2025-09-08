@@ -166,46 +166,46 @@ export class GameScene extends Phaser.Scene {
         this.events.once(Phaser.Scenes.Events.DESTROY, () => this.cleanup(true));
 
         // 드래그 앤 드롭
-        this.input.on('dragstart', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
-            if (gameObject instanceof Hero) {
-                const cell = worldToCell(gameObject.x, gameObject.y, this.gridMetrics);
-                if (cell) {
-                    this.occupied.delete(keyOf(cell.col, cell.row));
-                }
-            }
-        });
+        // this.input.on('dragstart', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
+        //     if (gameObject instanceof Hero) {
+        //         const cell = worldToCell(gameObject.x, gameObject.y, this.gridMetrics);
+        //         if (cell) {
+        //             this.occupied.delete(keyOf(cell.col, cell.row));
+        //         }
+        //     }
+        // });
 
-        this.input.on('drag', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, dragX: number, dragY: number) => {
-            if (gameObject instanceof Hero) {
-                gameObject.x = dragX;
-                gameObject.y = dragY;
-                this.drawRangeDisplay(gameObject);
-            }
-        });
+        // this.input.on('drag', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, dragX: number, dragY: number) => {
+        //     if (gameObject instanceof Hero) {
+        //         gameObject.x = dragX;
+        //         gameObject.y = dragY;
+        //         this.drawRangeDisplay(gameObject);
+        //     }
+        // });
 
-        this.input.on('dragend', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
-            if (gameObject instanceof Hero) {
-                const cell = worldToCell(gameObject.x, gameObject.y, this.gridMetrics);
-                if (cell && !this.occupied.has(keyOf(cell.col, cell.row))) {
-                    const { x, y } = cellToWorld(cell.col, cell.row, this.gridMetrics);
-                    gameObject.x = x;
-                    gameObject.y = y;
-                    this.occupied.add(keyOf(cell.col, cell.row));
-                } else {
-                    // 이전 위치로 복귀
-                    const pick = pickRandomFreeCell(this.gridCells, this.occupied);
-                    if (pick) {
-                        gameObject.x = pick.x;
-                        gameObject.y = pick.y;
-                        this.occupied.add(keyOf(pick.col, pick.row));
-                    }
-                }
-                // 드래그 종료 후에도 선택된 영웅이면 사거리 원 유지
-                if (this.selectedHero === gameObject) {
-                    this.drawRangeDisplay(gameObject);
-                }
-            }
-        });
+        // this.input.on('dragend', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
+        //     if (gameObject instanceof Hero) {
+        //         const cell = worldToCell(gameObject.x, gameObject.y, this.gridMetrics);
+        //         if (cell && !this.occupied.has(keyOf(cell.col, cell.row))) {
+        //             const { x, y } = cellToWorld(cell.col, cell.row, this.gridMetrics);
+        //             gameObject.x = x;
+        //             gameObject.y = y;
+        //             this.occupied.add(keyOf(cell.col, cell.row));
+        //         } else {
+        //             // 이전 위치로 복귀
+        //             const pick = pickRandomFreeCell(this.gridCells, this.occupied);
+        //             if (pick) {
+        //                 gameObject.x = pick.x;
+        //                 gameObject.y = pick.y;
+        //                 this.occupied.add(keyOf(pick.col, pick.row));
+        //             }
+        //         }
+        //         // 드래그 종료 후에도 선택된 영웅이면 사거리 원 유지
+        //         if (this.selectedHero === gameObject) {
+        //             this.drawRangeDisplay(gameObject);
+        //         }
+        //     }
+        // });
 
         // 영웅 클릭 이벤트 처리
         this.input.on('gameobjectdown', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
