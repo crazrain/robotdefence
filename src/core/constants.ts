@@ -44,3 +44,5 @@ export const MELEE_DEFAULT = {
     atkInterval: 0.45,
     range: 80     // 짧은 사거리(셀 1~1.5칸 정도)
 };
+
+export const HERO_MOVE_RANGE = 100; // 영웅 이동 가능 거리 (그리드 셀 기준)
