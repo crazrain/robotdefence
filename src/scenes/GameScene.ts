@@ -48,6 +48,7 @@ export class GameScene extends Phaser.Scene {
     // 시스템/뷰
     hud!: HUD;
     modeSelector!: ModeSelector;
+    summonButton!: SummonButton;
     spawner!: Spawner;
     waves!: WaveController;
 
@@ -145,11 +146,14 @@ export class GameScene extends Phaser.Scene {
         this.modeSelector = new ModeSelector(this, (m) => {
             this.mode = m;
             this.waves.start(this.mode, 0);
+            // 모드 선택 완료 후 소환 버튼 생성 및 활성화
+            this.summonButton = new SummonButton(this, () => this.trySummonHero());
+            this.summonButton.create();
         });
         this.modeSelector.show();
 
         // 유닛 소환(그리드 스냅)
-        new SummonButton(this, () => this.trySummonHero()).create();
+        // new SummonButton(this, () => this.trySummonHero()).create(); // 이 줄은 제거됨
 
         // 디버그 격자 시각화
         if (this.gridDebug) {
@@ -467,6 +471,7 @@ export class GameScene extends Phaser.Scene {
         // 오버레이/UI
         this.restartBlocker?.destroy();
         this.restartText?.destroy();
+        this.summonButton?.container.destroy(); // SummonButton 컨테이너 파괴 추가
 
         // 그래픽 리소스(최종 해제)
         if (hard) {
