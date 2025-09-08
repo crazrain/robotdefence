@@ -270,37 +270,29 @@ export class GameScene extends Phaser.Scene {
     }
 
     private trySummonHero() {
-        console.log('trySummonHero 호출됨');
         if (this.heroes.length >= MAX_HEROES) {
             this.toast(`영웅은 ${MAX_HEROES}명까지 소환할 수 있습니다`, '#ff7777');
-            console.log('MAX_HEROES 제한에 걸림');
             return;
         }
         if (this.gold < SUMMON_COST) {
             this.toast('골드가 부족합니다', '#ff7777');
-            console.log('골드 부족');
             return;
         }
         const pick = pickRandomFreeCell(this.gridCells, this.occupied);
         if (!pick) {
             this.toast('배치 가능한 자리가 없습니다', '#ff7777');
-            console.log('배치 가능한 자리가 없음');
             return;
         }
 
         this.gold -= SUMMON_COST;
-        console.log('골드 차감됨:', this.gold);
 
         const newHero = new Hero(this, pick.x, pick.y, 30, 0.5, 200);
         newHero.setDepth(5);
         this.heroes.push(newHero);
         this.occupied.add(keyOf(pick.col, pick.row));
-        console.log('새 영웅 생성 및 배열에 추가됨:', newHero);
-        console.log('occupied 셀:', keyOf(pick.col, pick.row));
 
         const fx = this.add.circle(pick.x, pick.y, 4, 0x99ddff).setAlpha(0.8);
         this.tweens.add({ targets: fx, radius: 40, alpha: 0, duration: 250, onComplete: () => fx.destroy() });
-        console.log('소환 효과 추가됨');
     }
 
     private drawGridDebug() {
