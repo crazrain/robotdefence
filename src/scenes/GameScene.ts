@@ -57,6 +57,8 @@ export class GameScene extends Phaser.Scene {
 
     // 그리드(정밀 정렬)
     private gridGfx?: Phaser.GameObjects.Graphics;
+    private rangeGfx?: Phaser.GameObjects.Graphics;
+    private selectedHero: Hero | null = null;
     private gridDebug = true;
     private gridMetrics!: GridMetrics;
     private gridCells: GridCell[] = [];
@@ -195,6 +197,23 @@ export class GameScene extends Phaser.Scene {
                 }
             }
         });
+
+        // 영웅 클릭 이벤트 처리
+        this.input.on('gameobjectdown', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
+            if (gameObject instanceof Hero) {
+                if (this.selectedHero === gameObject) {
+                    // 이미 선택된 영웅을 다시 클릭하면 선택 해제
+                    this.clearRangeDisplay();
+                } else {
+                    // 새로운 영웅 선택
+                    this.selectedHero = gameObject;
+                    this.drawRangeDisplay(gameObject);
+                }
+            } else {
+                // 영웅이 아닌 다른 곳을 클릭하면 선택 해제
+                this.clearRangeDisplay();
+            }
+        });
     }
 
     update(_: number, delta: number) {
@@ -306,6 +325,21 @@ export class GameScene extends Phaser.Scene {
             const y = top + r * m.cellH;
             this.gridGfx.lineBetween(left, y, right, y);
         }
+    }
+
+    private drawRangeDisplay(hero: Hero) {
+        if (!this.rangeGfx) {
+            this.rangeGfx = this.add.graphics({ lineStyle: { width: 2, color: 0x00ff00, alpha: 0.5 } }).setDepth(10);
+        }
+        this.rangeGfx.clear();
+        this.rangeGfx.strokeCircle(hero.x, hero.y, hero.range);
+    }
+
+    private clearRangeDisplay() {
+        if (this.rangeGfx) {
+            this.rangeGfx.clear();
+        }
+        this.selectedHero = null;
     }
 
     // ===== 보상/토스트 =====
@@ -435,6 +469,7 @@ export class GameScene extends Phaser.Scene {
         // 그래픽 리소스(최종 해제)
         if (hard) {
             this.gridGfx?.destroy();
+            this.rangeGfx?.destroy();
         }
     }
 }
