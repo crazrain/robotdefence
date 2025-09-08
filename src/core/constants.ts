@@ -26,7 +26,7 @@ export const SEAT = {
     bottom:{ x: LOOP_RECT_BOTTOM.left, y: LOOP_RECT_BOTTOM.bottom + 80 }
 };
 
-export const MAX_HEROES = 15;
+export const MAX_HEROES = 20;
 
 // 하단 그리드 설정(정밀 정렬용)
 export const GRID_PARAMS = {

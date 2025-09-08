@@ -175,6 +175,7 @@ export class GameScene extends Phaser.Scene {
             if (gameObject instanceof Hero) {
                 gameObject.x = dragX;
                 gameObject.y = dragY;
+                this.drawRangeDisplay(gameObject);
             }
         });
 
@@ -195,20 +196,21 @@ export class GameScene extends Phaser.Scene {
                         this.occupied.add(keyOf(pick.col, pick.row));
                     }
                 }
+                // 드래그 종료 후에도 선택된 영웅이면 사거리 원 유지
+                if (this.selectedHero === gameObject) {
+                    this.drawRangeDisplay(gameObject);
+                }
             }
         });
 
         // 영웅 클릭 이벤트 처리
         this.input.on('gameobjectdown', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
             if (gameObject instanceof Hero) {
-                if (this.selectedHero === gameObject) {
-                    // 이미 선택된 영웅을 다시 클릭하면 선택 해제
-                    this.clearRangeDisplay();
-                } else {
-                    // 새로운 영웅 선택
+                if (this.selectedHero !== gameObject) {
+                    // 다른 영웅을 클릭하면 새로운 영웅 선택
                     this.selectedHero = gameObject;
                     this.drawRangeDisplay(gameObject);
-                }
+                } // 같은 영웅을 클릭하면 아무것도 하지 않음 (선택 유지)
             } else {
                 // 영웅이 아닌 다른 곳을 클릭하면 선택 해제
                 this.clearRangeDisplay();
