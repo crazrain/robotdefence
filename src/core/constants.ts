@@ -26,10 +26,12 @@ export const SEAT = {
     bottom:{ x: LOOP_RECT_BOTTOM.left, y: LOOP_RECT_BOTTOM.bottom + 80 }
 };
 
+export const MAX_HEROES = 15;
+
 // 하단 그리드 설정(정밀 정렬용)
 export const GRID_PARAMS = {
-    cols: 7,          // 열 수
-    rows: 4,          // 행 수
+    cols: 6,          // 열 수
+    rows: 3,          // 행 수
     paddingX: 24,     // 사각형 안쪽 여백(좌우)
     paddingY: 24,     // 사각형 안쪽 여백(상하)
     gapX: 0,          // 셀 사이 가로 간격(선호: 0)
