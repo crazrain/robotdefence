@@ -64,7 +64,7 @@ export function cellToWorld(col: number, row: number, m: GridMetrics): { x: numb
     return { x, y };
 }
 
-const MAX_HEROES_PER_CELL = 3;
+export const MAX_HEROES_PER_CELL = 3;
 
 // 새로운 영웅 배치 로직
 export function addHeroToCell(cell: GridCell, hero: Hero): boolean {

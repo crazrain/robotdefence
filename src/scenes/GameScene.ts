@@ -33,7 +33,8 @@ import {
     removeHeroFromCell, // 추가
     isCellFull, // 추가
     isCellEmpty, // 추가
-    isCellFullWithType // 추가
+    isCellFullWithType, // 추가
+    MAX_HEROES_PER_CELL // 추가
 } from '../core/Grid';
 import { getDefaultConfig, type GameConfig } from '../core/config';
 import { RoundTimer } from '../systems/RoundTimer';
@@ -242,7 +243,7 @@ export class GameScene extends Phaser.Scene {
                     const targetCell = this.gridCells.find(c => c.col === clickedCellCoords.col && c.row === clickedCellCoords.row);
                     if (!targetCell) return; // 셀을 찾지 못하면 리턴
 
-                    const movableCells = this.calculateMovableCells(this.selectedCell.occupiedHeroes[0]);
+                    const movableCells = this.calculateMovableCells(this.selectedCell.occupiedHeroes[0], this.selectedCell.occupiedHeroes.length);
                     const isMovable = movableCells.some(cell => cell.col === targetCell.col && cell.row === targetCell.row);
 
                     // 이동 가능한 셀을 클릭했고, 해당 셀이 비어있거나 같은 종류의 영웅이 아직 3개가 차지 않았다면
@@ -490,7 +491,7 @@ export class GameScene extends Phaser.Scene {
 
     // ===== 영웅 이동 관련 =====
 
-    private calculateMovableCells(hero: Hero): GridCell[] {
+    private calculateMovableCells(hero: Hero, selectedHeroCount: number): GridCell[] {
         const currentCellCoords = worldToCell(hero.x, hero.y, this.gridMetrics);
         if (!currentCellCoords) return [];
 
@@ -500,7 +501,13 @@ export class GameScene extends Phaser.Scene {
         for (const cell of this.gridCells) {
             const distance = Math.abs(cell.col - currentCellCoords.col) + Math.abs(cell.row - currentCellCoords.row);
             // 이동 가능한 범위 내에 있고, 셀이 비어있거나 같은 종류의 영웅이 아직 3개가 차지 않았다면
-            if (distance <= range && (isCellEmpty(cell) || isCellFullWithType(cell, hero.type))) {
+            if (distance <= range && (
+                isCellEmpty(cell) || (
+                    cell.occupiedHeroes.length > 0 &&
+                    cell.occupiedHeroes[0].type === hero.type &&
+                    (cell.occupiedHeroes.length + selectedHeroCount <= MAX_HEROES_PER_CELL)
+                )
+            )) {
                 movable.push(cell);
             }
         }
@@ -510,7 +517,7 @@ export class GameScene extends Phaser.Scene {
     private drawMovableCells(hero: Hero) {
         this.clearMovableCells(); // 기존 표시 제거
 
-        const movableCells = this.calculateMovableCells(this.selectedCell!.occupiedHeroes[0]);
+        const movableCells = this.calculateMovableCells(this.selectedCell!.occupiedHeroes[0], this.selectedCell!.occupiedHeroes.length);
         const cellW = this.gridMetrics.cellW;
         const cellH = this.gridMetrics.cellH;
 
