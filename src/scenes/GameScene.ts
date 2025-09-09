@@ -66,7 +66,7 @@ export class GameScene extends Phaser.Scene {
     private rangeGfx?: Phaser.GameObjects.Graphics;
     private movableCellsGfx?: Phaser.GameObjects.Graphics; // movableCellsGfx 추가
     private movableCellRects: Phaser.GameObjects.Rectangle[] = []; // 이동 가능한 셀을 나타내는 사각형들
-    private selectedHero: Hero | null = null;
+    private selectedCell: GridCell | null = null;
     private gridDebug = true;
     private gridMetrics!: GridMetrics;
     private gridCells: GridCell[] = [];
@@ -221,60 +221,78 @@ export class GameScene extends Phaser.Scene {
 
             if (clickedHero) {
                 // 영웅을 클릭했을 때
-                if (this.selectedHero !== clickedHero) {
-                    // 다른 영웅을 클릭하면 새로운 영웅 선택
-                    this.selectedHero = clickedHero;
-                    this.drawRangeDisplay(clickedHero);
-                    this.drawMovableCells(clickedHero);
+                const clickedCellCoords = worldToCell(clickedHero.x, clickedHero.y, this.gridMetrics);
+                if (!clickedCellCoords) return;
+                const clickedCell = this.gridCells.find(c => c.col === clickedCellCoords.col && c.row === clickedCellCoords.row);
+                if (!clickedCell) return;
+
+                if (this.selectedCell !== clickedCell) {
+                    // 다른 셀의 영웅을 클릭하면 새로운 셀 선택
+                    this.selectedCell = clickedCell;
+                    this.drawRangeDisplay(clickedCell.occupiedHeroes[0]); // 셀의 첫 번째 영웅 기준으로 사거리 표시
+                    this.drawMovableCells(clickedCell.occupiedHeroes[0]); // 셀의 첫 번째 영웅 기준으로 이동 가능 셀 표시
                 } else {
-                    // 같은 영웅을 다시 클릭하면 선택 해제
+                    // 같은 셀의 영웅을 다시 클릭하면 선택 해제
                     this.clearRangeDisplay();
                 }
-            } else if (this.selectedHero) {
-                // 선택된 영웅이 있고, 영웅이 아닌 다른 곳을 클릭했을 때
+            } else if (this.selectedCell) {
+                // 선택된 셀이 있고, 영웅이 아닌 다른 곳을 클릭했을 때
                 const clickedCellCoords = worldToCell(pointer.worldX, pointer.worldY, this.gridMetrics);
                 if (clickedCellCoords) {
-                    const clickedCell = this.gridCells.find(c => c.col === clickedCellCoords.col && c.row === clickedCellCoords.row);
-                    if (!clickedCell) return; // 셀을 찾지 못하면 리턴
+                    const targetCell = this.gridCells.find(c => c.col === clickedCellCoords.col && c.row === clickedCellCoords.row);
+                    if (!targetCell) return; // 셀을 찾지 못하면 리턴
 
-                    const movableCells = this.calculateMovableCells(this.selectedHero);
-                    const isMovable = movableCells.some(cell => cell.col === clickedCell.col && cell.row === clickedCell.row);
+                    const movableCells = this.calculateMovableCells(this.selectedCell.occupiedHeroes[0]);
+                    const isMovable = movableCells.some(cell => cell.col === targetCell.col && cell.row === targetCell.row);
 
                     // 이동 가능한 셀을 클릭했고, 해당 셀이 비어있거나 같은 종류의 영웅이 아직 3개가 차지 않았다면
-                    if (isMovable && (isCellEmpty(clickedCell) || (!isCellFull(clickedCell) && clickedCell.occupiedHeroes[0].type === this.selectedHero.type))) {
-                        // 이전 셀에서 영웅 제거
-                        const oldCellCoords = worldToCell(this.selectedHero.x, this.selectedHero.y, this.gridMetrics);
-                        if (oldCellCoords) {
-                            const oldCell = this.gridCells.find(c => c.col === oldCellCoords.col && c.row === oldCellCoords.row);
-                            if (oldCell) {
-                                removeHeroFromCell(oldCell, this.selectedHero);
-                                // 이전 셀에 남아있는 영웅들의 위치 재조정
-                                const { x: oldCellX, y: oldCellY } = cellToWorld(oldCell.col, oldCell.row, this.gridMetrics);
-                                oldCell.occupiedHeroes.forEach((heroInCell, idx) => {
-                                    heroInCell.updatePositionInCell(idx, oldCell.occupiedHeroes.length, oldCellX, oldCellY);
-                                });
-                            }
-                        }
+                    if (isMovable && (isCellEmpty(targetCell) || (!isCellFull(targetCell) && targetCell.occupiedHeroes[0].type === this.selectedCell.occupiedHeroes[0].type))) {
+                        // 이전 셀의 모든 영웅을 새 셀로 이동
+                        const heroesToMove = [...this.selectedCell.occupiedHeroes]; // 이동할 영웅들 복사
+                        const oldCell = this.selectedCell;
 
-                        // 새 셀에 영웅 추가
-                        addHeroToCell(clickedCell, this.selectedHero);
+                        // 이전 셀에서 모든 영웅 제거
+                        oldCell.occupiedHeroes.forEach(hero => removeHeroFromCell(oldCell, hero));
+                        oldCell.occupiedHeroes.length = 0; // 배열 비우기
 
-                        const { x, y } = cellToWorld(clickedCell.col, clickedCell.row, this.gridMetrics);
+                        // 새 셀에 모든 영웅 추가
+                        heroesToMove.forEach(hero => addHeroToCell(targetCell, hero));
+
+                        const { x, y } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
                         // 새 셀에 있는 영웅들의 위치 조정
-                        clickedCell.occupiedHeroes.forEach((heroInCell, idx) => {
-                            heroInCell.updatePositionInCell(idx, clickedCell.occupiedHeroes.length, x, y);
+                        targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
+                            heroInCell.updatePositionInCell(idx, targetCell.occupiedHeroes.length, x, y);
                         });
 
-                        this.tweens.add({
-                            targets: this.selectedHero,
-                            x: x,
-                            y: y,
-                            duration: 300,
-                            ease: 'Power2',
-                            onComplete: () => {
-                                this.clearRangeDisplay();
-                            }
+                        const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
+
+                        const { x: oldCellCenterX, y: oldCellCenterY } = cellToWorld(oldCell.col, oldCell.row, this.gridMetrics);
+
+                        // 이동 애니메이션
+                        let completedAnimations = 0;
+                        heroesToMove.forEach((hero, idx) => {
+                            // 각 영웅의 최종 목표 위치를 미리 계산
+                            const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, heroesToMove.length, targetCellCenterX, targetCellCenterY);
+
+                            // 애니메이션 시작 전에 영웅의 위치를 이전 셀의 중앙으로 설정
+                            hero.x = oldCellCenterX;
+                            hero.y = oldCellCenterY;
+
+                            this.tweens.add({
+                                targets: hero,
+                                x: targetX,
+                                y: targetY,
+                                duration: 500, // 애니메이션 지속 시간 증가
+                                ease: 'Sine.Out', // 이징 함수 변경
+                                onComplete: () => {
+                                    completedAnimations++;
+                                    if (completedAnimations === heroesToMove.length) {
+                                        this.clearRangeDisplay();
+                                    }
+                                }
+                            });
                         });
+                        this.selectedCell = null; // 이동 후 선택 해제
                     } else {
                         // 이동 불가능한 셀을 클릭하거나 이미 점유된 셀을 클릭했을 때 선택 해제
                         this.clearRangeDisplay();
@@ -372,20 +390,27 @@ export class GameScene extends Phaser.Scene {
 
         this.gold -= SUMMON_COST;
 
-        const { x, y } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
-        const newHero = new Hero(this, x, y, 30, 0.5, 200, randomHeroType); // HeroType 인자 추가
+        const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
+        const newHero = new Hero(this, targetCellCenterX, targetCellCenterY, 30, 0.5, 200, randomHeroType); // HeroType 인자 추가
         newHero.setDepth(5);
         this.heroes.push(newHero);
 
         // 실제 영웅 객체를 셀에 추가
         addHeroToCell(targetCell, newHero);
 
-        // 새 셀에 있는 영웅들의 위치 조정
+        // 새 셀에 있는 영웅들의 최종 목표 위치 계산
         targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
-            heroInCell.updatePositionInCell(idx, targetCell!.occupiedHeroes.length, x, y);
+            const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, targetCell.occupiedHeroes.length, targetCellCenterX, targetCellCenterY);
+            this.tweens.add({
+                targets: heroInCell,
+                x: targetX,
+                y: targetY,
+                duration: 300,
+                ease: 'Power2',
+            });
         });
 
-        const fx = this.add.circle(x, y, 4, 0x99ddff).setAlpha(0.8);
+        const fx = this.add.circle(targetCellCenterX, targetCellCenterY, 4, 0x99ddff).setAlpha(0.8);
         this.tweens.add({ targets: fx, radius: 40, alpha: 0, duration: 250, onComplete: () => fx.destroy() });
     }
 
@@ -424,6 +449,8 @@ export class GameScene extends Phaser.Scene {
             this.rangeGfx = this.add.graphics({ lineStyle: { width: 2, color: 0x000000, alpha: 0.5 } }).setDepth(10);
         }
         this.rangeGfx.clear();
+        // 선택된 셀의 모든 영웅의 사거리를 표시 (가장 큰 사거리를 가진 영웅을 기준으로 할 수도 있음)
+        // 여기서는 첫 번째 영웅의 사거리를 기준으로 표시합니다.
         this.rangeGfx.strokeCircle(hero.x, hero.y, hero.range);
     }
 
@@ -431,7 +458,7 @@ export class GameScene extends Phaser.Scene {
         if (this.rangeGfx) {
             this.rangeGfx.clear();
         }
-        this.selectedHero = null;
+        this.selectedCell = null;
         this.clearMovableCells(); // 사거리 표시 지울 때 이동 가능 셀도 지움
     }
 
@@ -457,7 +484,7 @@ export class GameScene extends Phaser.Scene {
     private drawMovableCells(hero: Hero) {
         this.clearMovableCells(); // 기존 표시 제거
 
-        const movableCells = this.calculateMovableCells(hero);
+        const movableCells = this.calculateMovableCells(this.selectedCell!.occupiedHeroes[0]);
         const cellW = this.gridMetrics.cellW;
         const cellH = this.gridMetrics.cellH;
 

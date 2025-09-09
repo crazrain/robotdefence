@@ -22,6 +22,13 @@ export class Hero extends Unit {
 
     // 셀 내에서 영웅의 상대적인 위치를 조정하는 메서드
     public updatePositionInCell(index: number, total: number, cellCenterX: number, cellCenterY: number) {
+        const { offsetX, offsetY } = Hero.calculateOffsetInCell(index, total);
+        this.x = cellCenterX + offsetX;
+        this.y = cellCenterY + offsetY;
+    }
+
+    // 셀 내에서 영웅의 상대적인 위치 오프셋을 계산하는 정적 메서드
+    public static calculateOffsetInCell(index: number, total: number): { offsetX: number, offsetY: number } {
         let offsetX = 0;
         let offsetY = 0;
         const spacing = 25; // 영웅 간의 간격 증가
@@ -47,7 +54,12 @@ export class Hero extends Unit {
                 offsetY = spacing / 2;
             }
         }
-        this.x = cellCenterX + offsetX;
-        this.y = cellCenterY + offsetY;
+        return { offsetX, offsetY };
+    }
+
+    // 셀 내에서 영웅의 최종 목표 위치를 계산하는 정적 메서드
+    public static calculateTargetPositionInCell(index: number, total: number, cellCenterX: number, cellCenterY: number): { x: number, y: number } {
+        const { offsetX, offsetY } = Hero.calculateOffsetInCell(index, total);
+        return { x: cellCenterX + offsetX, y: cellCenterY + offsetY };
     }
 }
