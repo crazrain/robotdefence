@@ -10,7 +10,13 @@ export class Hero extends Unit {
     constructor(scene: Phaser.Scene, x: number, y: number, atk: number, atkInterval: number, range: number, type: HeroType) {
         super(scene, x, y, atk, atkInterval, range);
         this.type = type; // 생성자에서 영웅 종류 설정
-        this.setFillStyle(0xffd700, 1); // Gold color for the hero
+
+        const heroColors: Record<HeroType, number> = {
+            'TypeA': 0xffd700, // Gold
+            'TypeB': 0x00bfff, // Deep Sky Blue
+            'TypeC': 0xff6347, // Tomato
+        };
+        this.setFillStyle(heroColors[this.type] || 0xffd700, 1); // 영웅 종류에 따라 색상 설정, 기본값은 Gold
         this.setInteractive();
     }
 
