@@ -246,8 +246,8 @@ export class GameScene extends Phaser.Scene {
                     const movableCells = this.calculateMovableCells(this.selectedCell.occupiedHeroes[0], this.selectedCell.occupiedHeroes.length);
                     const isMovable = movableCells.some(cell => cell.col === targetCell.col && cell.row === targetCell.row);
 
-                    // 이동 가능한 셀을 클릭했고, 해당 셀이 비어있거나 같은 종류의 영웅이 아직 3개가 차지 않았다면
-                    if (isMovable && (isCellEmpty(targetCell) || (!isCellFull(targetCell) && targetCell.occupiedHeroes[0].type === this.selectedCell.occupiedHeroes[0].type))) {
+                    // 이동 가능한 셀을 클릭했고, 해당 셀이 비어있다면
+                    if (isMovable && isCellEmpty(targetCell)) {
                         const heroesToMove = [...this.selectedCell.occupiedHeroes]; // 이동할 영웅들 복사
                         const oldCell = this.selectedCell;
                         const { x: oldCellCenterX, y: oldCellCenterY } = cellToWorld(oldCell.col, oldCell.row, this.gridMetrics);
@@ -519,13 +519,7 @@ export class GameScene extends Phaser.Scene {
         for (const cell of this.gridCells) {
             const distance = Math.abs(cell.col - currentCellCoords.col) + Math.abs(cell.row - currentCellCoords.row);
             // 이동 가능한 범위 내에 있고, 셀이 비어있거나 같은 종류의 영웅이 아직 3개가 차지 않았다면
-            if (distance <= range && (
-                isCellEmpty(cell) || (
-                    cell.occupiedHeroes.length > 0 &&
-                    cell.occupiedHeroes[0].type === hero.type &&
-                    (cell.occupiedHeroes.length + selectedHeroCount <= MAX_HEROES_PER_CELL)
-                )
-            )) {
+            if (distance <= range && isCellEmpty(cell)) {
                 movable.push(cell);
             }
         }
