@@ -401,12 +401,30 @@ export class GameScene extends Phaser.Scene {
         let targetCell: GridCell | null = null;
         // 임시 Hero 객체를 생성하여 addHeroToCell의 유효성 검사에 사용
         const tempHeroForValidation = { type: randomHeroType } as Hero;
+
+        // 1. 먼저 선택된 영웅 타입과 동일한 영웅이 MAX_HEROES_PER_CELL 미만으로 있는 셀을 찾습니다.
         for (const cell of this.gridCells) {
-            if (addHeroToCell(cell, tempHeroForValidation)) {
-                targetCell = cell;
-                // 유효성 검사 후 임시로 추가된 영웅은 제거
-                removeHeroFromCell(cell, tempHeroForValidation);
-                break;
+            if (cell.occupiedHeroes.length > 0 && cell.occupiedHeroes[0].type === randomHeroType && cell.occupiedHeroes.length < MAX_HEROES_PER_CELL) {
+                // 해당 셀에 영웅을 추가할 수 있는지 addHeroToCell로 확인
+                if (addHeroToCell(cell, tempHeroForValidation)) {
+                    targetCell = cell;
+                    removeHeroFromCell(cell, tempHeroForValidation); // 유효성 검사 후 임시로 추가된 영웅은 제거
+                    break;
+                }
+            }
+        }
+
+        // 2. 만약 1번 조건에 맞는 셀이 없다면, 비어있는 셀을 찾습니다.
+        if (!targetCell) {
+            for (const cell of this.gridCells) {
+                if (isCellEmpty(cell)) {
+                    // 해당 셀에 영웅을 추가할 수 있는지 addHeroToCell로 확인
+                    if (addHeroToCell(cell, tempHeroForValidation)) {
+                        targetCell = cell;
+                        removeHeroFromCell(cell, tempHeroForValidation); // 유효성 검사 후 임시로 추가된 영웅은 제거
+                        break;
+                    }
+                }
             }
         }
 
