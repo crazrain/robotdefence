@@ -14,10 +14,10 @@ export class ModeSelector {
         const w = this.scene.scale.width, h = this.scene.scale.height;
         this.overlay = this.scene.add.rectangle(w / 2, h / 2, w, h, 0x000000, 0.5).setDepth(1000);
 
-        this.btnSolo = this.scene.add.rectangle(w / 2 - 150, h / 2, 220, 100, 0x3a6ea5).setDepth(1001).setInteractive();
+        this.btnSolo = this.scene.add.rectangle(w / 2 - 150, h / 2 - 21, 220, 100, 0x3a6ea5).setDepth(1001).setInteractive();
         this.labelSolo = this.scene.add.text(this.btnSolo.x, this.btnSolo.y, '1인(SOLO)', { color: '#fff', fontSize: '26px', fontFamily: 'monospace' }).setOrigin(0.5).setDepth(1002);
 
-        this.btnDuo = this.scene.add.rectangle(w / 2 + 150, h / 2, 220, 100, 0xa55e3a).setDepth(1001).setInteractive();
+        this.btnDuo = this.scene.add.rectangle(w / 2 + 150, h / 2 - 21, 220, 100, 0xa55e3a).setDepth(1001).setInteractive();
         this.labelDuo = this.scene.add.text(this.btnDuo.x, this.btnDuo.y, '2인(DUO)', { color: '#fff', fontSize: '26px', fontFamily: 'monospace' }).setOrigin(0.5).setDepth(1002);
 
         const pick = (mode: Mode) => {
