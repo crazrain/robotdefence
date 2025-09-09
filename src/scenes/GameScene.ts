@@ -13,7 +13,7 @@ import {
     HERO_MOVE_RANGE // HERO_MOVE_RANGE 임포트 추가
 } from '../core/constants';
 import { buildBottomLoop, buildTopLoop } from '../core/Path';
-import type { Mode } from '../core/types';
+import type { Mode, HeroType } from '../core/types'; // HeroType 임포트 추가
 import { Enemy } from '../objects/Enemy';
 import { Unit } from '../objects/Unit';
 import { Projectile } from '../objects/Projectile';
@@ -26,10 +26,14 @@ import {
     buildBottomGrid,
     type GridCell,
     type GridMetrics,
-    pickRandomFreeCell,
     keyOf,
     worldToCell,
-    cellToWorld
+    cellToWorld,
+    addHeroToCell, // 추가
+    removeHeroFromCell, // 추가
+    isCellFull, // 추가
+    isCellEmpty, // 추가
+    isCellFullWithType // 추가
 } from '../core/Grid';
 import { getDefaultConfig, type GameConfig } from '../core/config';
 import { RoundTimer } from '../systems/RoundTimer';
@@ -66,7 +70,7 @@ export class GameScene extends Phaser.Scene {
     private gridDebug = true;
     private gridMetrics!: GridMetrics;
     private gridCells: GridCell[] = [];
-    private occupied = new Set<string>(); // "col,row"
+    // private occupied = new Set<string>(); // "col,row" - 제거됨
 
     // 라운드(게임) 타임아웃
     private cfg: GameConfig = getDefaultConfig('Normal');
@@ -168,7 +172,7 @@ export class GameScene extends Phaser.Scene {
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
         this.events.once(Phaser.Scenes.Events.DESTROY, () => this.cleanup(true));
 
-        // 드래그 앤 드롭
+        // 드래그 앤 드롭 (주석 처리된 부분은 변경하지 않음)
         // this.input.on('dragstart', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
         //     if (gameObject instanceof Hero) {
         //         const cell = worldToCell(gameObject.x, gameObject.y, this.gridMetrics);
@@ -228,19 +232,39 @@ export class GameScene extends Phaser.Scene {
                 }
             } else if (this.selectedHero) {
                 // 선택된 영웅이 있고, 영웅이 아닌 다른 곳을 클릭했을 때
-                const clickedCell = worldToCell(pointer.worldX, pointer.worldY, this.gridMetrics);
-                if (clickedCell) {
+                const clickedCellCoords = worldToCell(pointer.worldX, pointer.worldY, this.gridMetrics);
+                if (clickedCellCoords) {
+                    const clickedCell = this.gridCells.find(c => c.col === clickedCellCoords.col && c.row === clickedCellCoords.row);
+                    if (!clickedCell) return; // 셀을 찾지 못하면 리턴
+
                     const movableCells = this.calculateMovableCells(this.selectedHero);
                     const isMovable = movableCells.some(cell => cell.col === clickedCell.col && cell.row === clickedCell.row);
 
-                    if (isMovable && !this.occupied.has(keyOf(clickedCell.col, clickedCell.row))) {
-                        // 이동 가능한 셀을 클릭했을 때 영웅 이동
-                        const oldCell = worldToCell(this.selectedHero.x, this.selectedHero.y, this.gridMetrics);
-                        if (oldCell) {
-                            this.occupied.delete(keyOf(oldCell.col, oldCell.row));
+                    // 이동 가능한 셀을 클릭했고, 해당 셀이 비어있거나 같은 종류의 영웅이 아직 3개가 차지 않았다면
+                    if (isMovable && (isCellEmpty(clickedCell) || (!isCellFull(clickedCell) && clickedCell.occupiedHeroes[0].type === this.selectedHero.type))) {
+                        // 이전 셀에서 영웅 제거
+                        const oldCellCoords = worldToCell(this.selectedHero.x, this.selectedHero.y, this.gridMetrics);
+                        if (oldCellCoords) {
+                            const oldCell = this.gridCells.find(c => c.col === oldCellCoords.col && c.row === oldCellCoords.row);
+                            if (oldCell) {
+                                removeHeroFromCell(oldCell, this.selectedHero);
+                                // 이전 셀에 남아있는 영웅들의 위치 재조정
+                                const { x: oldCellX, y: oldCellY } = cellToWorld(oldCell.col, oldCell.row, this.gridMetrics);
+                                oldCell.occupiedHeroes.forEach((heroInCell, idx) => {
+                                    heroInCell.updatePositionInCell(idx, oldCell.occupiedHeroes.length, oldCellX, oldCellY);
+                                });
+                            }
                         }
 
+                        // 새 셀에 영웅 추가
+                        addHeroToCell(clickedCell, this.selectedHero);
+
                         const { x, y } = cellToWorld(clickedCell.col, clickedCell.row, this.gridMetrics);
+                        // 새 셀에 있는 영웅들의 위치 조정
+                        clickedCell.occupiedHeroes.forEach((heroInCell, idx) => {
+                            heroInCell.updatePositionInCell(idx, clickedCell.occupiedHeroes.length, x, y);
+                        });
+
                         this.tweens.add({
                             targets: this.selectedHero,
                             x: x,
@@ -248,7 +272,6 @@ export class GameScene extends Phaser.Scene {
                             duration: 300,
                             ease: 'Power2',
                             onComplete: () => {
-                                this.occupied.add(keyOf(clickedCell.col, clickedCell.row));
                                 this.clearRangeDisplay();
                             }
                         });
@@ -311,7 +334,8 @@ export class GameScene extends Phaser.Scene {
         const built = buildBottomGrid();
         this.gridMetrics = built.metrics;
         this.gridCells = built.cells;
-        this.occupied.clear();
+        // this.occupied.clear(); // 제거됨
+        this.gridCells.forEach(cell => cell.occupiedHeroes = []); // 각 셀의 occupiedHeroes 초기화
     }
 
     private trySummonHero() {
@@ -323,20 +347,45 @@ export class GameScene extends Phaser.Scene {
             this.toast('골드가 부족합니다', '#ff7777');
             return;
         }
-        const pick = pickRandomFreeCell(this.gridCells, this.occupied);
-        if (!pick) {
+
+        // 영웅 종류를 임의로 선택 (나중에 소환 버튼에 따라 선택하도록 변경 가능)
+        const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC'];
+        const randomHeroType = heroTypes[(Math.random() * heroTypes.length) | 0];
+
+        // 배치 가능한 셀 찾기
+        let targetCell: GridCell | null = null;
+        // 임시 Hero 객체를 생성하여 addHeroToCell의 유효성 검사에 사용
+        const tempHeroForValidation = { type: randomHeroType } as Hero;
+        for (const cell of this.gridCells) {
+            if (addHeroToCell(cell, tempHeroForValidation)) {
+                targetCell = cell;
+                // 유효성 검사 후 임시로 추가된 영웅은 제거
+                removeHeroFromCell(cell, tempHeroForValidation);
+                break;
+            }
+        }
+
+        if (!targetCell) {
             this.toast('배치 가능한 자리가 없습니다', '#ff7777');
             return;
         }
 
         this.gold -= SUMMON_COST;
 
-        const newHero = new Hero(this, pick.x, pick.y, 30, 0.5, 200);
+        const { x, y } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
+        const newHero = new Hero(this, x, y, 30, 0.5, 200, randomHeroType); // HeroType 인자 추가
         newHero.setDepth(5);
         this.heroes.push(newHero);
-        this.occupied.add(keyOf(pick.col, pick.row));
 
-        const fx = this.add.circle(pick.x, pick.y, 4, 0x99ddff).setAlpha(0.8);
+        // 실제 영웅 객체를 셀에 추가
+        addHeroToCell(targetCell, newHero);
+
+        // 새 셀에 있는 영웅들의 위치 조정
+        targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
+            heroInCell.updatePositionInCell(idx, targetCell!.occupiedHeroes.length, x, y);
+        });
+
+        const fx = this.add.circle(x, y, 4, 0x99ddff).setAlpha(0.8);
         this.tweens.add({ targets: fx, radius: 40, alpha: 0, duration: 250, onComplete: () => fx.destroy() });
     }
 
@@ -372,7 +421,7 @@ export class GameScene extends Phaser.Scene {
 
     private drawRangeDisplay(hero: Hero) {
         if (!this.rangeGfx) {
-            this.rangeGfx = this.add.graphics({ lineStyle: { width: 2, color: 0x00ff00, alpha: 0.5 } }).setDepth(10);
+            this.rangeGfx = this.add.graphics({ lineStyle: { width: 2, color: 0x000000, alpha: 0.5 } }).setDepth(10);
         }
         this.rangeGfx.clear();
         this.rangeGfx.strokeCircle(hero.x, hero.y, hero.range);
@@ -389,15 +438,16 @@ export class GameScene extends Phaser.Scene {
     // ===== 영웅 이동 관련 =====
 
     private calculateMovableCells(hero: Hero): GridCell[] {
-        const currentCell = worldToCell(hero.x, hero.y, this.gridMetrics);
-        if (!currentCell) return [];
+        const currentCellCoords = worldToCell(hero.x, hero.y, this.gridMetrics);
+        if (!currentCellCoords) return [];
 
         const movable: GridCell[] = [];
         const range = HERO_MOVE_RANGE;
 
         for (const cell of this.gridCells) {
-            const distance = Math.abs(cell.col - currentCell.col) + Math.abs(cell.row - currentCell.row);
-            if (distance <= range && !this.occupied.has(keyOf(cell.col, cell.row))) {
+            const distance = Math.abs(cell.col - currentCellCoords.col) + Math.abs(cell.row - currentCellCoords.row);
+            // 이동 가능한 범위 내에 있고, 셀이 비어있거나 같은 종류의 영웅이 아직 3개가 차지 않았다면
+            if (distance <= range && (isCellEmpty(cell) || isCellFullWithType(cell, hero.type))) {
                 movable.push(cell);
             }
         }

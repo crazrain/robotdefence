@@ -1,5 +1,18 @@
+import type { Hero } from '../objects/Hero'; // Hero 클래스 임포트
+
 export type Vec2 = { x: number; y: number };
 export type Mode = 'solo' | 'duo';
+
+export type HeroType = 'TypeA' | 'TypeB' | 'TypeC'; // 새로운 영웅 종류 정의
+
+// GridCell 타입을 확장하여 영웅 정보를 포함
+export type GridCell = {
+    col: number;
+    row: number;
+    x: number;
+    y: number;
+    occupiedHeroes: Hero[]; // 해당 셀에 있는 영웅 객체 배열로 변경
+};
 
 // src/core/types.ts (WaveDef 확장)
 export type WaveDef = {

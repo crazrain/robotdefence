@@ -1,6 +1,7 @@
 import { LOOP_RECT_BOTTOM, GRID_PARAMS } from './constants';
+import type { HeroType, GridCell } from './types';
+import type { Hero } from '../objects/Hero'; // Hero 클래스 임포트
 
-export type GridCell = { col: number; row: number; x: number; y: number };
 export type GridMetrics = {
     originX: number; originY: number;   // 좌상단 시작점
     cellW: number; cellH: number;       // 셀 크기
@@ -34,16 +35,10 @@ export function buildBottomGrid(): { metrics: GridMetrics; cells: GridCell[] } {
         for (let c = 0; c < cols; c++) {
             const cx = originX + c * (cellW + gapX) + cellW / 2;
             const cy = originY + r * (cellH + gapY) + cellH / 2;
-            cells.push({ col: c, row: r, x: cx, y: cy });
+            cells.push({ col: c, row: r, x: cx, y: cy, occupiedHeroes: [] }); // occupiedHeroes 초기화
         }
     }
     return { metrics, cells };
-}
-
-export function pickRandomFreeCell(cells: GridCell[], occupied: Set<string>): GridCell | null {
-    const free = cells.filter(c => !occupied.has(keyOf(c.col, c.row)));
-    if (free.length === 0) return null;
-    return free[(Math.random() * free.length) | 0];
 }
 
 export function keyOf(col: number, row: number) {
@@ -67,4 +62,60 @@ export function cellToWorld(col: number, row: number, m: GridMetrics): { x: numb
     const x = m.originX + col * m.cellW + m.cellW / 2;
     const y = m.originY + row * m.cellH + m.cellH / 2;
     return { x, y };
+}
+
+const MAX_HEROES_PER_CELL = 3;
+
+// 새로운 영웅 배치 로직
+export function addHeroToCell(cell: GridCell, hero: Hero): boolean {
+    // 1. 셀이 비어있는 경우
+    if (cell.occupiedHeroes.length === 0) {
+        cell.occupiedHeroes.push(hero);
+        return true;
+    }
+
+    // 2. 이미 영웅이 있는 경우
+    const existingHeroType = cell.occupiedHeroes[0].type;
+
+    // 2-1. 다른 종류의 영웅이 이미 있는 경우 (규칙 위반)
+    if (existingHeroType !== hero.type) {
+        console.warn(`Cannot add ${hero.type} to cell (${cell.col},${cell.row}). It already contains ${existingHeroType} heroes.`);
+        return false;
+    }
+
+    // 2-2. 같은 종류의 영웅이 아직 최대치 미만인 경우
+    if (cell.occupiedHeroes.length < MAX_HEROES_PER_CELL) {
+        cell.occupiedHeroes.push(hero);
+        return true;
+    } else {
+        // 2-3. 같은 종류의 영웅이 이미 최대치인 경우
+        console.warn(`Cannot add more ${hero.type} heroes to cell (${cell.col},${cell.row}). It's full.`);
+        return false;
+    }
+}
+
+// 셀에서 영웅을 제거하는 로직
+export function removeHeroFromCell(cell: GridCell, hero: Hero): boolean {
+    const index = cell.occupiedHeroes.indexOf(hero);
+    if (index > -1) {
+        cell.occupiedHeroes.splice(index, 1);
+        return true;
+    }
+    return false;
+}
+
+// 셀이 가득 찼는지 확인하는 함수
+export function isCellFull(cell: GridCell): boolean {
+    return cell.occupiedHeroes.length === MAX_HEROES_PER_CELL;
+}
+
+// 셀이 특정 영웅 타입으로 가득 찼는지 확인하는 함수
+export function isCellFullWithType(cell: GridCell, heroType: HeroType): boolean {
+    return cell.occupiedHeroes.length === MAX_HEROES_PER_CELL &&
+           cell.occupiedHeroes.every(h => h.type === heroType);
+}
+
+// 셀이 비어있는지 확인하는 함수
+export function isCellEmpty(cell: GridCell): boolean {
+    return cell.occupiedHeroes.length === 0;
 }
