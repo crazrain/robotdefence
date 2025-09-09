@@ -68,6 +68,7 @@ export class GameScene extends Phaser.Scene {
     private movableCellsGfx?: Phaser.GameObjects.Graphics; // movableCellsGfx 추가
     private movableCellRects: Phaser.GameObjects.Rectangle[] = []; // 이동 가능한 셀을 나타내는 사각형들
     private selectedCell: GridCell | null = null;
+    private selectedHero: Hero | null = null;
     private gridDebug = true;
     private gridMetrics!: GridMetrics;
     private gridCells: GridCell[] = [];
@@ -220,7 +221,7 @@ export class GameScene extends Phaser.Scene {
             const clickedGameObjects = this.input.manager.hitTest(pointer, this.children.list, this.cameras.main);
             const clickedHero = clickedGameObjects.find(obj => obj instanceof Hero) as Hero | undefined;
 
-            if (this.selectedCell) {
+            if (this.selectedCell && this.selectedHero) {
                 // 영웅이 선택된 상태에서 다른 곳을 클릭했을 때 (이동 또는 교환 시도)
                 const clickedCellCoords = worldToCell(pointer.worldX, pointer.worldY, this.gridMetrics);
                 if (clickedCellCoords) {
@@ -230,10 +231,11 @@ export class GameScene extends Phaser.Scene {
                         return;
                     }
 
-                    const movableCells = this.calculateMovableCells(this.selectedCell.occupiedHeroes[0], this.selectedCell.occupiedHeroes.length);
+                    const movableCells = this.calculateMovableCells(this.selectedHero, this.selectedCell.occupiedHeroes.length);
                     const isMovable = movableCells.some(cell => cell.col === targetCell.col && cell.row === targetCell.row);
 
                     if (isMovable) {
+                        const tempSelectedHero = this.selectedHero; // 임시 변수에 selectedHero 저장
                         const oldCell = this.selectedCell;
                         if (!oldCell) return;
 
@@ -255,13 +257,13 @@ export class GameScene extends Phaser.Scene {
 
                             targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
                                 const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, targetCell.occupiedHeroes.length, targetCellCenterX, targetCellCenterY);
+                                const isLastHero = idx === targetCell.occupiedHeroes.length - 1;
                                 this.tweens.add({
                                     targets: heroInCell,
                                     x: targetX,
                                     y: targetY,
                                     duration: 300,
-                                    ease: 'Power2',
-                                    onComplete: () => this.clearRangeDisplay()
+                                    ease: 'Power2'
                                 });
                             });
                         } else {
@@ -277,34 +279,36 @@ export class GameScene extends Phaser.Scene {
 
                             oldCell.occupiedHeroes.forEach((heroInCell, idx) => {
                                 const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, oldCell.occupiedHeroes.length, oldCellCenterX, oldCellCenterY);
+                                const isLastHero = idx === oldCell.occupiedHeroes.length - 1;
                                 this.tweens.add({
                                     targets: heroInCell,
                                     x: targetX,
                                     y: targetY,
                                     duration: 300,
-                                    ease: 'Power2',
-                                    onComplete: () => this.clearRangeDisplay()
+                                    ease: 'Power2'
                                 });
                             });
 
                             targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
                                 const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, targetCell.occupiedHeroes.length, targetCellCenterX, targetCellCenterY);
+                                const isLastHero = idx === targetCell.occupiedHeroes.length - 1;
                                 this.tweens.add({
                                     targets: heroInCell,
                                     x: targetX,
                                     y: targetY,
                                     duration: 300,
-                                    ease: 'Power2',
-                                    onComplete: () => this.clearRangeDisplay()
+                                    ease: 'Power2'
                                 });
                             });
                         }
                         this.selectedCell = null; // 이동/교환 후 선택 해제
+                        // this.selectedHero = null; // 이동/교환 후 선택 해제 (사거리 유지를 위해 주석 처리)
+                        this.clearMovableCells(); // 이동/교환 후 이동 가능 셀도 지움
                     } else {
-                        this.clearRangeDisplay(); // 이동 불가능한 셀을 클릭했을 때 선택 해제
+                        this.clearMovableCells(); // 이동 불가능한 셀을 클릭했을 때 선택 해제
                     }
                 } else {
-                    this.clearRangeDisplay(); // 그리드 밖을 클릭했을 때 선택 해제
+                    this.clearMovableCells(); // 그리드 밖을 클릭했을 때 선택 해제
                 }
             } else if (clickedHero) {
                 // 영웅이 선택되지 않은 상태에서 영웅을 클릭했을 때 (새로운 영웅 선택)
@@ -314,8 +318,9 @@ export class GameScene extends Phaser.Scene {
                 if (!clickedCell) return;
 
                 this.selectedCell = clickedCell;
-                this.drawRangeDisplay(clickedCell.occupiedHeroes[0]);
-                this.drawMovableCells(clickedCell.occupiedHeroes[0]);
+                this.selectedHero = clickedHero; // 선택된 영웅 설정
+                this.drawRangeDisplay(clickedHero);
+                this.drawMovableCells(clickedHero);
             } else {
                 // 선택된 영웅이 없고, 영웅이 아닌 다른 곳을 클릭하면 아무것도 하지 않음
                 this.clearRangeDisplay();
@@ -345,6 +350,10 @@ export class GameScene extends Phaser.Scene {
         this.enemies = this.enemies.filter((e) => e.alive);
         this.projectiles = this.projectiles.filter((p) => p.alive);
         for (const p of this.projectiles) p.update(dt);
+
+        if (this.selectedHero) {
+            this.drawRangeDisplay(this.selectedHero);
+        }
 
         // 웨이브
         this.waves.update(dt, this.mode, this.enemies);
@@ -492,6 +501,7 @@ export class GameScene extends Phaser.Scene {
             this.rangeGfx.clear();
         }
         this.selectedCell = null;
+        this.selectedHero = null; // 선택된 영웅 해제
         this.clearMovableCells(); // 사거리 표시 지울 때 이동 가능 셀도 지움
     }
 
