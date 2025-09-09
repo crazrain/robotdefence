@@ -18,18 +18,18 @@ export class Hero extends Unit {
     public updatePositionInCell(index: number, total: number, cellCenterX: number, cellCenterY: number) {
         let offsetX = 0;
         let offsetY = 0;
-        const spacing = 10; // 영웅 간의 간격
+        const spacing = 25; // 영웅 간의 간격 증가
 
         if (total === 1) {
             // 1개일 때는 중앙에 배치
             offsetX = 0;
             offsetY = 0;
         } else if (total === 2) {
-            // 2개일 때는 좌우로 배치
+            // 2개일 때는 좌우로 배치, 더 넓게
             offsetX = index === 0 ? -spacing / 2 : spacing / 2;
             offsetY = 0;
         } else if (total === 3) {
-            // 3개일 때는 삼각형 형태로 배치
+            // 3개일 때는 삼각형 형태로 배치, 간격 넓게
             if (index === 0) {
                 offsetX = 0;
                 offsetY = -spacing / 2;
