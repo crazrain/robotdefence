@@ -221,108 +221,80 @@ export class GameScene extends Phaser.Scene {
             const clickedGameObjects = this.input.manager.hitTest(pointer, this.children.list, this.cameras.main);
             const clickedHero = clickedGameObjects.find(obj => obj instanceof Hero) as Hero | undefined;
 
+            // 1. 영웅이 선택된 상태일 때의 로직
             if (this.selectedCell && this.selectedHero) {
-                // 영웅이 선택된 상태에서 다른 곳을 클릭했을 때 (이동 또는 교환 시도)
                 const clickedCellCoords = worldToCell(pointer.worldX, pointer.worldY, this.gridMetrics);
-                if (clickedCellCoords) {
-                    const targetCell = this.gridCells.find(c => c.col === clickedCellCoords.col && c.row === clickedCellCoords.row);
-                    if (!targetCell) {
-                        this.clearRangeDisplay(); // 셀을 찾지 못하면 선택 해제
-                        return;
-                    }
 
-                    const movableCells = this.calculateMovableCells(this.selectedHero, this.selectedCell.occupiedHeroes.length);
-                    const isMovable = movableCells.some(cell => cell.col === targetCell.col && cell.row === targetCell.row);
-
-                    if (isMovable) {
-                        const tempSelectedHero = this.selectedHero; // 임시 변수에 selectedHero 저장
-                        const oldCell = this.selectedCell;
-                        if (!oldCell) return;
-
-                        const { x: oldCellCenterX, y: oldCellCenterY } = cellToWorld(oldCell.col, oldCell.row, this.gridMetrics);
-                        const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
-
-                        // 같은 셀을 다시 클릭한 경우 (선택 해제)
-                        if (oldCell === targetCell) {
-                            this.clearRangeDisplay();
-                            return;
-                        }
-
-                        // targetCell이 비어있는 경우 (단순 이동)
-                        if (isCellEmpty(targetCell)) {
-                            const heroesToMove = [...oldCell.occupiedHeroes];
-                            oldCell.occupiedHeroes.length = 0;
-
-                            heroesToMove.forEach(hero => addHeroToCell(targetCell, hero));
-
-                            targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
-                                const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, targetCell.occupiedHeroes.length, targetCellCenterX, targetCellCenterY);
-                                const isLastHero = idx === targetCell.occupiedHeroes.length - 1;
-                                this.tweens.add({
-                                    targets: heroInCell,
-                                    x: targetX,
-                                    y: targetY,
-                                    duration: 300,
-                                    ease: 'Power2'
-                                });
-                            });
-                        } else {
-                            // targetCell이 비어있지 않은 경우 (셀 교환)
-                            const heroesInOldCell = [...oldCell.occupiedHeroes];
-                            const heroesInTargetCell = [...targetCell.occupiedHeroes];
-
-                            oldCell.occupiedHeroes.length = 0;
-                            targetCell.occupiedHeroes.length = 0;
-
-                            heroesInTargetCell.forEach(hero => addHeroToCell(oldCell, hero));
-                            heroesInOldCell.forEach(hero => addHeroToCell(targetCell, hero));
-
-                            oldCell.occupiedHeroes.forEach((heroInCell, idx) => {
-                                const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, oldCell.occupiedHeroes.length, oldCellCenterX, oldCellCenterY);
-                                const isLastHero = idx === oldCell.occupiedHeroes.length - 1;
-                                this.tweens.add({
-                                    targets: heroInCell,
-                                    x: targetX,
-                                    y: targetY,
-                                    duration: 300,
-                                    ease: 'Power2'
-                                });
-                            });
-
-                            targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
-                                const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, targetCell.occupiedHeroes.length, targetCellCenterX, targetCellCenterY);
-                                const isLastHero = idx === targetCell.occupiedHeroes.length - 1;
-                                this.tweens.add({
-                                    targets: heroInCell,
-                                    x: targetX,
-                                    y: targetY,
-                                    duration: 300,
-                                    ease: 'Power2'
-                                });
-                            });
-                        }
-                        this.selectedCell = null; // 이동/교환 후 선택 해제
-                        // this.selectedHero = null; // 이동/교환 후 선택 해제 (사거리 유지를 위해 주석 처리)
-                        this.clearMovableCells(); // 이동/교환 후 이동 가능 셀도 지움
-                    } else {
-                        this.clearMovableCells(); // 이동 불가능한 셀을 클릭했을 때 선택 해제
-                    }
-                } else {
-                    this.clearMovableCells(); // 그리드 밖을 클릭했을 때 선택 해제
+                // 그리드 밖을 클릭했거나, 유효하지 않은 셀이면 선택 해제
+                if (!clickedCellCoords) {
+                    this.clearRangeDisplay();
+                    return;
                 }
+                const targetCell = this.gridCells.find(c => c.col === clickedCellCoords.col && c.row === clickedCellCoords.row);
+                if (!targetCell) {
+                    this.clearRangeDisplay();
+                    return;
+                }
+
+                // 이미 선택된 셀을 다시 클릭하면 선택 해제
+                if (targetCell === this.selectedCell) {
+                    this.clearRangeDisplay();
+                    return;
+                }
+
+                // 이동 가능한 셀인지 확인
+                const movableCells = this.calculateMovableCells(this.selectedCell, this.selectedCell.occupiedHeroes.length);
+                const isMovable = movableCells.some(cell => cell.col === targetCell.col && cell.row === targetCell.row);
+
+                if (isMovable) {
+                    // 이동/교환 로직 (기존과 동일)
+                    const oldCell = this.selectedCell;
+                    const { x: oldCellCenterX, y: oldCellCenterY } = cellToWorld(oldCell.col, oldCell.row, this.gridMetrics);
+                    const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
+
+                    if (isCellEmpty(targetCell)) { // 단순 이동
+                        const heroesToMove = [...oldCell.occupiedHeroes];
+                        oldCell.occupiedHeroes.length = 0;
+                        heroesToMove.forEach(hero => addHeroToCell(targetCell, hero));
+                        targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
+                            const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, targetCell.occupiedHeroes.length, targetCellCenterX, targetCellCenterY);
+                            this.tweens.add({ targets: heroInCell, x: targetX, y: targetY, duration: 300, ease: 'Power2' });
+                        });
+                    } else { // 셀 교환
+                        const heroesInOldCell = [...oldCell.occupiedHeroes];
+                        const heroesInTargetCell = [...targetCell.occupiedHeroes];
+                        oldCell.occupiedHeroes.length = 0;
+                        targetCell.occupiedHeroes.length = 0;
+                        heroesInTargetCell.forEach(hero => addHeroToCell(oldCell, hero));
+                        heroesInOldCell.forEach(hero => addHeroToCell(targetCell, hero));
+                        oldCell.occupiedHeroes.forEach((heroInCell, idx) => {
+                            const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, oldCell.occupiedHeroes.length, oldCellCenterX, oldCellCenterY);
+                            this.tweens.add({ targets: heroInCell, x: targetX, y: targetY, duration: 300, ease: 'Power2' });
+                        });
+                        targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
+                            const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, targetCell.occupiedHeroes.length, targetCellCenterX, targetCellCenterY);
+                            this.tweens.add({ targets: heroInCell, x: targetX, y: targetY, duration: 300, ease: 'Power2' });
+                        });
+                    }
+                    this.selectedCell = targetCell; // 새로운 셀을 선택된 셀로 업데이트
+                    this.drawMovableCells(); // 새로운 위치에서 이동 가능 셀 다시 그리기
+                } else {
+                    // 이동 불가능한 셀을 클릭하면 선택 해제
+                    this.clearRangeDisplay();
+                }
+            // 2. 선택된 영웅이 없고, 영웅을 클릭했을 때
             } else if (clickedHero) {
-                // 영웅이 선택되지 않은 상태에서 영웅을 클릭했을 때 (새로운 영웅 선택)
                 const clickedCellCoords = worldToCell(clickedHero.x, clickedHero.y, this.gridMetrics);
                 if (!clickedCellCoords) return;
                 const clickedCell = this.gridCells.find(c => c.col === clickedCellCoords.col && c.row === clickedCellCoords.row);
                 if (!clickedCell) return;
 
                 this.selectedCell = clickedCell;
-                this.selectedHero = clickedHero; // 선택된 영웅 설정
+                this.selectedHero = clickedHero;
                 this.drawRangeDisplay(clickedHero);
-                this.drawMovableCells(clickedHero);
+                this.drawMovableCells();
+            // 3. 선택된 영웅이 없고, 영웅이 아닌 곳을 클릭했을 때
             } else {
-                // 선택된 영웅이 없고, 영웅이 아닌 다른 곳을 클릭하면 아무것도 하지 않음
                 this.clearRangeDisplay();
             }
         });
@@ -507,16 +479,14 @@ export class GameScene extends Phaser.Scene {
 
     // ===== 영웅 이동 관련 =====
 
-    private calculateMovableCells(hero: Hero, selectedHeroCount: number): GridCell[] {
-        const currentCellCoords = worldToCell(hero.x, hero.y, this.gridMetrics);
-        if (!currentCellCoords) return [];
+    private calculateMovableCells(currentCell: GridCell, selectedHeroCount: number): GridCell[] {
+        const currentCellCoords = { col: currentCell.col, row: currentCell.row };
 
         const movable: GridCell[] = [];
         const range = HERO_MOVE_RANGE;
 
         for (const cell of this.gridCells) {
             const distance = Math.abs(cell.col - currentCellCoords.col) + Math.abs(cell.row - currentCellCoords.row);
-            // 이동 가능한 범위 내에 있고, 셀이 비어있거나 같은 종류의 영웅이 아직 3개가 차지 않았다면
             // 이동 가능한 범위 내에 있고, 선택된 셀 자신이 아니라면 이동 가능 셀로 간주
             if (distance <= range && !(cell.col === currentCellCoords.col && cell.row === currentCellCoords.row)) {
                 movable.push(cell);
@@ -525,10 +495,12 @@ export class GameScene extends Phaser.Scene {
         return movable;
     }
 
-    private drawMovableCells(hero: Hero) {
+    private drawMovableCells() {
         this.clearMovableCells(); // 기존 표시 제거
 
-        const movableCells = this.calculateMovableCells(this.selectedCell!.occupiedHeroes[0], this.selectedCell!.occupiedHeroes.length);
+        if (!this.selectedCell) return;
+
+        const movableCells = this.calculateMovableCells(this.selectedCell, this.selectedCell.occupiedHeroes.length);
         const cellW = this.gridMetrics.cellW;
         const cellH = this.gridMetrics.cellH;
 
