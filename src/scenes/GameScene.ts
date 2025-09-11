@@ -311,6 +311,9 @@ export class GameScene extends Phaser.Scene {
                     this.clearMovableCells(); // 그리드 밖을 클릭했을 때 선택 해제
                 }
             } else if (clickedHero) {
+                if (this.selectedHero === clickedHero) {
+                    return;
+                }
                 // 영웅이 선택되지 않은 상태에서 영웅을 클릭했을 때 (새로운 영웅 선택)
                 const clickedCellCoords = worldToCell(clickedHero.x, clickedHero.y, this.gridMetrics);
                 if (!clickedCellCoords) return;
