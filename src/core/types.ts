@@ -5,6 +5,8 @@ export type Mode = 'solo' | 'duo';
 
 export type HeroType = 'TypeA' | 'TypeB' | 'TypeC' | 'TypeD' | 'TypeE'; // 새로운 영웅 종류 정의
 
+export type HeroRank = 'Rank1' | 'Rank2' | 'Rank3' | 'Rank4' | 'Rank5'; // 영웅 등급 정의
+
 // GridCell 타입을 확장하여 영웅 정보를 포함
 export type GridCell = {
     col: number;

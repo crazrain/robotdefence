@@ -2,14 +2,36 @@
 
 import { Unit } from './Unit';
 import Phaser from 'phaser';
-import type { HeroType } from '../core/types'; // HeroType 임포트
+import type { HeroType, HeroRank } from '../core/types'; // HeroType, HeroRank 임포트
 
 export class Hero extends Unit {
     public type: HeroType; // 영웅 종류 속성 추가
+    public rank: HeroRank; // 영웅 등급 속성 추가
 
     constructor(scene: Phaser.Scene, x: number, y: number, atk: number, atkInterval: number, range: number, type: HeroType) {
         super(scene, x, y, atk, atkInterval, range);
         this.type = type; // 생성자에서 영웅 종류 설정
+
+        // HeroType을 HeroRank로 매핑
+        const heroTypeToRankMap: Record<HeroType, HeroRank> = {
+            'TypeA': 'Rank1',
+            'TypeB': 'Rank2',
+            'TypeC': 'Rank3',
+            'TypeD': 'Rank4',
+            'TypeE': 'Rank5',
+        };
+        this.rank = heroTypeToRankMap[this.type]; // 영웅 등급 설정
+
+        // 등급별 배경 색상 정의 (영웅의 실제 색상에는 영향을 주지 않음)
+        const heroRankBackgroundColors: Record<HeroRank, number> = {
+            'Rank1': 0x808080, // Gray
+            'Rank2': 0x0000ff, // Blue
+            'Rank3': 0x800080, // Purple
+            'Rank4': 0xffa500, // Orange
+            'Rank5': 0xff0000, // Red
+        };
+        // 이 색상은 셀 배경색으로 사용될 예정이며, 영웅 자체의 색상에는 영향을 주지 않습니다.
+        // this.setFillStyle(heroRankBackgroundColors[this.rank] || 0x808080, 1); // 영웅 등급에 따라 색상 설정, 기본값은 Gray
 
         const heroColors: Record<HeroType, number> = {
             'TypeA': 0xffd700, // Gold
