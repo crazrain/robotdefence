@@ -15,6 +15,8 @@ export class Hero extends Unit {
             'TypeA': 0xffd700, // Gold
             'TypeB': 0x00bfff, // Deep Sky Blue
             'TypeC': 0xff6347, // Tomato
+            'TypeD': 0x8a2be2, // Blue Violet
+            'TypeE': 0x32cd32, // Lime Green
         };
         this.setFillStyle(heroColors[this.type] || 0xffd700, 1); // 영웅 종류에 따라 색상 설정, 기본값은 Gold
         this.setInteractive();

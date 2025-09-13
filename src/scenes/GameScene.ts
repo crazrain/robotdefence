@@ -363,7 +363,7 @@ export class GameScene extends Phaser.Scene {
         }
 
         // 영웅 종류를 임의로 선택 (나중에 소환 버튼에 따라 선택하도록 변경 가능)
-        const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC'];
+        const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC', 'TypeD', 'TypeE'];
         const randomHeroType = heroTypes[(Math.random() * heroTypes.length) | 0];
 
         // 배치 가능한 셀 찾기

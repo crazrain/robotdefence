@@ -3,7 +3,7 @@ import type { Hero } from '../objects/Hero'; // Hero 클래스 임포트
 export type Vec2 = { x: number; y: number };
 export type Mode = 'solo' | 'duo';
 
-export type HeroType = 'TypeA' | 'TypeB' | 'TypeC'; // 새로운 영웅 종류 정의
+export type HeroType = 'TypeA' | 'TypeB' | 'TypeC' | 'TypeD' | 'TypeE'; // 새로운 영웅 종류 정의
 
 // GridCell 타입을 확장하여 영웅 정보를 포함
 export type GridCell = {
