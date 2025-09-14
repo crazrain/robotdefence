@@ -28,6 +28,7 @@ export class Hero extends Phaser.GameObjects.Image {
     constructor(scene: Phaser.Scene, x: number, y: number, atk: number, atkInterval: number, range: number, type: HeroType) {
         const heroData = HEROES_DATA.find(h => h.type === type);
         const imageKey = heroData ? heroData.imageKey : 'Basic1';
+        const heroSize = 40;
         
         super(scene, x, y, imageKey);
         this.scene.add.existing(this);
@@ -36,7 +37,7 @@ export class Hero extends Phaser.GameObjects.Image {
         this.atk = atk;
         this.atkInterval = atkInterval;
         this.range = range;
-        this.setDisplaySize(28, 28);
+        this.setDisplaySize(heroSize, heroSize);
         this.fireSoundKey = heroData ? heroData.imageKey + '_sound' : 'Basic1_sound';
 
         // HeroType을 HeroRank로 매핑
@@ -65,7 +66,7 @@ export class Hero extends Phaser.GameObjects.Image {
     public static calculateOffsetInCell(index: number, total: number): { offsetX: number, offsetY: number } {
         let offsetX = 0;
         let offsetY = 0;
-        const spacing = 30; // 영웅 간의 간격 증가
+        const spacing = 35; // 영웅 간의 간격 증가
 
         if (total === 1) {
             // 1개일 때는 중앙에 배치
