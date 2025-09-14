@@ -156,8 +156,7 @@ export class GridManager {
 
             if (isMovable) {
                 this.moveOrSwapHeroes(this.selectedCell, targetCell);
-                this.selectedCell = targetCell;
-                this.drawMovableCells();
+                this.clearSelection();
             } else {
                 this.clearSelection();
             }
