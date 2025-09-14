@@ -53,6 +53,7 @@ export interface HeroData {
   name: string;
   imageKey: string; // 코드에서 사용할 이미지 별명
   assetPath: string; // 실제 이미지 파일 경로
+  type: HeroType;
 }
 
 // 모든 영웅의 데이터를 담는 배열
@@ -62,29 +63,34 @@ export const HEROES_DATA: HeroData[] = [
     name: 'Warrior',
     imageKey: 'Basic1',
     assetPath: 'assets/images/Basic1.png',
+    type: 'TypeA',
   },
   {
     id: 1,
     name: 'Mage',
     imageKey: 'Rare1',
     assetPath: 'assets/images/Rare1.png',
+    type: 'TypeB',
   },
   {
     id: 2,
     name: 'Archer',
     imageKey: 'Epic1',
     assetPath: 'assets/images/Epic1.png',
+    type: 'TypeC',
   },
   {
     id: 3,
     name: 'Healer',
     imageKey: 'Legendary1',
     assetPath: 'assets/images/Legendary1.png',
+    type: 'TypeD',
   },
   {
     id: 4,
     name: 'Tanker',
     imageKey: 'Mythical1',
     assetPath: 'assets/images/Mythical1.png',
+    type: 'TypeE',
   },
 ];

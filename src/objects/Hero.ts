@@ -25,7 +25,7 @@ export class Hero extends Phaser.GameObjects.Image {
     };
 
     constructor(scene: Phaser.Scene, x: number, y: number, atk: number, atkInterval: number, range: number, type: HeroType) {
-        const heroData = HEROES_DATA.find(h => h.name === 'Warrior'); // 임시로 Warrior 데이터를 사용
+        const heroData = HEROES_DATA.find(h => h.type === type);
         const imageKey = heroData ? heroData.imageKey : 'Basic1';
 
         super(scene, x, y, imageKey);
