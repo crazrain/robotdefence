@@ -169,6 +169,8 @@ export class GameScene extends Phaser.Scene {
             this.gridGfx = this.add.graphics().setDepth(2);
             this.drawGridDebug();
         }
+        // 사거리 표시 그래픽 초기화
+        this.rangeGfx = this.add.graphics({ lineStyle: { width: 2, color: 0x00ffff, alpha: 0.5 } }).setDepth(10);
 
         // 라이프사이클 훅(자동 정리)
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
@@ -628,6 +630,8 @@ export class GameScene extends Phaser.Scene {
         this.enemies.length = 0;
         this.projectiles.length = 0;
         this.heroes.length = 0;
+        this.selectedHero = null;
+        this.selectedCell = null;
     }
 
     private cleanup(hard = false) {
@@ -653,7 +657,7 @@ export class GameScene extends Phaser.Scene {
         // 그래픽 리소스(최종 해제)
         if (hard) {
             this.gridGfx?.destroy();
-            this.rangeGfx?.destroy();
+            this.rangeGfx = undefined;
             this.movableCellsGfx?.destroy(); // movableCellsGfx 파괴 추가
             this.movableCellRects.forEach(rect => rect.destroy()); // movableCellRects 파괴 추가
             this.movableCellRects.length = 0;
