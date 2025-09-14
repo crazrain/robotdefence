@@ -46,3 +46,45 @@ export const MELEE_DEFAULT = {
 };
 
 export const HERO_MOVE_RANGE = 100; // 영웅 이동 가능 거리 (그리드 셀 기준)
+
+// Hero
+export interface HeroData {
+  id: number;
+  name: string;
+  imageKey: string; // 코드에서 사용할 이미지 별명
+  assetPath: string; // 실제 이미지 파일 경로
+}
+
+// 모든 영웅의 데이터를 담는 배열
+export const HEROES_DATA: HeroData[] = [
+  {
+    id: 0,
+    name: 'Warrior',
+    imageKey: 'Basic1',
+    assetPath: 'assets/images/Basic1.png',
+  },
+  {
+    id: 1,
+    name: 'Mage',
+    imageKey: 'Rare1',
+    assetPath: 'assets/images/Rare1.png',
+  },
+  {
+    id: 2,
+    name: 'Archer',
+    imageKey: 'Epic1',
+    assetPath: 'assets/images/Epic1.png',
+  },
+  {
+    id: 3,
+    name: 'Healer',
+    imageKey: 'Legendary1',
+    assetPath: 'assets/images/Legendary1.png',
+  },
+  {
+    id: 4,
+    name: 'Tanker',
+    imageKey: 'Mythical1',
+    assetPath: 'assets/images/Mythical1.png',
+  },
+];

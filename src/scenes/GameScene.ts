@@ -8,6 +8,7 @@ import {
     LOOP_RECT_TOP,
     WAVE_CLEAR_BASE,
     WAVE_CLEAR_GROWTH,
+    HEROES_DATA,
 } from '../core/constants';
 import { buildBottomLoop, buildTopLoop } from '../core/Path';
 import type { Mode } from '../core/types';
@@ -75,6 +76,13 @@ export class GameScene extends Phaser.Scene {
 
     constructor() {
         super('GameScene');
+    }
+
+    preload() {
+        // HEROES_DATA 배열을 순회하며 모든 영웅 이미지를 로드합니다.
+        HEROES_DATA.forEach(hero => {
+            this.load.image(hero.imageKey, hero.assetPath);
+        });
     }
 
     create() {
