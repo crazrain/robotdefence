@@ -8,6 +8,14 @@ export class Hero extends Unit {
     public type: HeroType; // 영웅 종류 속성 추가
     public rank: HeroRank; // 영웅 등급 속성 추가
 
+    private static heroRankBackgroundColors: Record<HeroRank, number> = {
+        'Rank1': 0x808080, // Gray
+        'Rank2': 0x0000ff, // Blue
+        'Rank3': 0x800080, // Purple
+        'Rank4': 0xffa500, // Orange
+        'Rank5': 0xff0000, // Red
+    };
+
     constructor(scene: Phaser.Scene, x: number, y: number, atk: number, atkInterval: number, range: number, type: HeroType) {
         super(scene, x, y, atk, atkInterval, range);
         this.type = type; // 생성자에서 영웅 종류 설정
@@ -22,17 +30,6 @@ export class Hero extends Unit {
         };
         this.rank = heroTypeToRankMap[this.type]; // 영웅 등급 설정
 
-        // 등급별 배경 색상 정의 (영웅의 실제 색상에는 영향을 주지 않음)
-        const heroRankBackgroundColors: Record<HeroRank, number> = {
-            'Rank1': 0x808080, // Gray
-            'Rank2': 0x0000ff, // Blue
-            'Rank3': 0x800080, // Purple
-            'Rank4': 0xffa500, // Orange
-            'Rank5': 0xff0000, // Red
-        };
-        // 이 색상은 셀 배경색으로 사용될 예정이며, 영웅 자체의 색상에는 영향을 주지 않습니다.
-        // this.setFillStyle(heroRankBackgroundColors[this.rank] || 0x808080, 1); // 영웅 등급에 따라 색상 설정, 기본값은 Gray
-
         const heroColors: Record<HeroType, number> = {
             'TypeA': 0xffd700, // Gold
             'TypeB': 0x00bfff, // Deep Sky Blue
@@ -42,6 +39,10 @@ export class Hero extends Unit {
         };
         this.setFillStyle(heroColors[this.type] || 0xffd700, 1); // 영웅 종류에 따라 색상 설정, 기본값은 Gold
         this.setInteractive();
+    }
+
+    public getRankBackgroundColor(): number {
+        return Hero.heroRankBackgroundColors[this.rank] || 0x808080;
     }
 
     // 셀 내에서 영웅의 상대적인 위치를 조정하는 메서드

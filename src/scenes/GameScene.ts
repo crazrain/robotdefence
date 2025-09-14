@@ -64,6 +64,7 @@ export class GameScene extends Phaser.Scene {
 
     // 그리드(정밀 정렬)
     private gridGfx?: Phaser.GameObjects.Graphics;
+    private cellGfx?: Phaser.GameObjects.Graphics; // cellGfx 추가
     private rangeGfx?: Phaser.GameObjects.Graphics;
     private movableCellsGfx?: Phaser.GameObjects.Graphics; // movableCellsGfx 추가
     private movableCellRects: Phaser.GameObjects.Rectangle[] = []; // 이동 가능한 셀을 나타내는 사각형들
@@ -169,6 +170,8 @@ export class GameScene extends Phaser.Scene {
             this.gridGfx = this.add.graphics().setDepth(2);
             this.drawGridDebug();
         }
+        // 셀 배경 그래픽 초기화
+        this.cellGfx = this.add.graphics().setDepth(1);
         // 사거리 표시 그래픽 초기화
         this.rangeGfx = this.add.graphics({ lineStyle: { width: 2, color: 0x00ffff, alpha: 0.5 } }).setDepth(10);
 
@@ -352,6 +355,7 @@ export class GameScene extends Phaser.Scene {
         this.gridCells = built.cells;
         // this.occupied.clear(); // 제거됨
         this.gridCells.forEach(cell => cell.occupiedHeroes = []); // 각 셀의 occupiedHeroes 초기화
+        this.cellGfx?.clear(); // 셀 배경색 초기화
     }
 
     private trySummonHero() {
@@ -414,6 +418,9 @@ export class GameScene extends Phaser.Scene {
         // 실제 영웅 객체를 셀에 추가
         addHeroToCell(targetCell, newHero);
 
+        // 셀 배경색 업데이트
+        this.drawCellBackground(targetCell);
+
         // 새 셀에 있는 영웅들의 최종 목표 위치 계산
         targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
             const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, targetCell.occupiedHeroes.length, targetCellCenterX, targetCellCenterY);
@@ -457,6 +464,28 @@ export class GameScene extends Phaser.Scene {
         for (let r = 0; r <= m.rows; r++) {
             const y = top + r * m.cellH;
             this.gridGfx.lineBetween(left, y, right, y);
+        }
+
+        // 셀 배경색 그리기
+        this.gridCells.forEach(cell => this.drawCellBackground(cell));
+    }
+
+    private drawCellBackground(cell: GridCell) {
+        if (!this.cellGfx) return;
+        
+        const { x, y } = cellToWorld(cell.col, cell.row, this.gridMetrics);
+        const cellW = this.gridMetrics.cellW;
+        const cellH = this.gridMetrics.cellH;
+
+        if (cell.occupiedHeroes.length > 0) {
+            const hero = cell.occupiedHeroes[0]; // 셀의 첫 번째 영웅을 기준으로 등급 색상 결정
+            const color = hero.getRankBackgroundColor();
+            this.cellGfx.fillStyle(color, 0.3); // 등급 색상으로 채우기
+            this.cellGfx.fillRect(x - cellW / 2, y - cellH / 2, cellW, cellH);
+        } else {
+            // 영웅이 없으면 투명하게 지움
+            this.cellGfx.fillStyle(0x000000, 0); // 투명한 검은색으로 채워서 지우는 효과
+            this.cellGfx.fillRect(x - cellW / 2, y - cellH / 2, cellW, cellH);
         }
     }
 
@@ -657,6 +686,7 @@ export class GameScene extends Phaser.Scene {
         // 그래픽 리소스(최종 해제)
         if (hard) {
             this.gridGfx?.destroy();
+            this.cellGfx?.destroy(); // cellGfx 파괴 추가
             this.rangeGfx = undefined;
             this.movableCellsGfx?.destroy(); // movableCellsGfx 파괴 추가
             this.movableCellRects.forEach(rect => rect.destroy()); // movableCellRects 파괴 추가
