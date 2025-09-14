@@ -24,6 +24,7 @@ import { getDefaultConfig, type GameConfig } from '../core/config';
 import { RoundTimer } from '../systems/RoundTimer';
 import { Hero } from '../objects/Hero';
 import { GridManager } from '../systems/GridManager';
+import { SpeedControlButton } from '../ui/SpeedControlButton';
 
 export class GameScene extends Phaser.Scene {
     // 경로(상·하 루프)
@@ -43,10 +44,12 @@ export class GameScene extends Phaser.Scene {
     spawner!: Spawner;
     waves!: WaveController;
     gridManager!: GridManager;
+    speedControlButton!: SpeedControlButton;
 
     // 경제/모드
     gold = 200;
     mode: Mode = 'solo';
+    private gameSpeed = 1;
 
     // 라운드(게임) 타임아웃
     private cfg: GameConfig = getDefaultConfig('Normal');
@@ -92,6 +95,7 @@ export class GameScene extends Phaser.Scene {
         this._cleaned = false;
         this.halted = false;
         this.gold = 200;
+        this.gameSpeed = 1;
         this.resetRuntimeArrays();
 
         this.cameras.main.setBackgroundColor('#101018');
@@ -145,6 +149,11 @@ export class GameScene extends Phaser.Scene {
         });
         this.modeSelector.show();
 
+        this.speedControlButton = new SpeedControlButton(this, GAME_WIDTH - 70, 50);
+        this.events.on('speedChanged', (speed: number) => {
+            this.gameSpeed = speed;
+        });
+
         // 라이프사이클 훅(자동 정리)
         this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanup());
         this.events.once(Phaser.Scenes.Events.DESTROY, () => this.cleanup(true));
@@ -154,7 +163,7 @@ export class GameScene extends Phaser.Scene {
         // 전투 정지 상태면 로직 스킵(입력은 살아 있음)
         if (this.halted) return;
 
-        const dt = delta / 1000;
+        const dt = (delta / 1000) * this.gameSpeed;
 
         // 라운드 타이머
         this.round.update(dt);
@@ -232,6 +241,7 @@ export class GameScene extends Phaser.Scene {
         // 기본 상태 재설정(안전)
         this.halted = false;
         this.gold = 200;
+        this.gameSpeed = 1;
         this.gridManager.reset();
         this.resetRuntimeArrays();
 
@@ -301,6 +311,7 @@ export class GameScene extends Phaser.Scene {
 
         // 이벤트/입력
         this.events.off('enemy_killed', this.enemyKilledHandler);
+        this.events.off('speedChanged');
         this.input.keyboard?.removeAllListeners();
 
         // 타이머/트윈
@@ -315,5 +326,6 @@ export class GameScene extends Phaser.Scene {
         this.restartBlocker?.destroy();
         this.restartText?.destroy();
         this.summonButton?.container.destroy(); // SummonButton 컨테이너 파괴 추가
+        this.speedControlButton?.destroy();
     }
 }
