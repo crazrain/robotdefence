@@ -98,19 +98,8 @@ export class WaveController {
 
         // 웨이브 시간 종료 정책
         if (this.rt.timeLeft <= 0) {
-            if (this.cfg.useWaveTimeoutFail) {
-                if (enemies.length > 0) {
-                    this.onGameOver('웨이브 제한 시간 내에 처치하지 못했습니다.');
-                    return;
-                }
-                this.onWaveCleared(this.rt.index);
-                this.nextOrWin(_mode);
-                return;
-            }
-            if (allSpawned && enemies.length === 0) {
-                this.onWaveCleared(this.rt.index);
-                this.nextOrWin(_mode);
-            }
+            this.onWaveCleared(this.rt.index);
+            this.nextOrWin(_mode);
             return;
         }
 
