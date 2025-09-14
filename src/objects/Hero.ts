@@ -63,7 +63,7 @@ export class Hero extends Phaser.GameObjects.Image {
     public static calculateOffsetInCell(index: number, total: number): { offsetX: number, offsetY: number } {
         let offsetX = 0;
         let offsetY = 0;
-        const spacing = 25; // 영웅 간의 간격 증가
+        const spacing = 30; // 영웅 간의 간격 증가
 
         if (total === 1) {
             // 1개일 때는 중앙에 배치
