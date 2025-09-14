@@ -111,6 +111,11 @@ export class Hero extends Phaser.GameObjects.Image {
             }
         }
 
+        if (this.lastTarget) {
+            const angle = Phaser.Math.Angle.Between(this.x, this.y, this.lastTarget.x, this.lastTarget.y);
+            this.rotation = angle + Math.PI / 2; // 스프라이트가 위쪽을 향하고 있다고 가정
+        }
+
         if (this.lastTarget && this.timeSinceAttack >= this.atkInterval) {
             this.shoot(projectiles, this.lastTarget);
             this.timeSinceAttack = 0;
