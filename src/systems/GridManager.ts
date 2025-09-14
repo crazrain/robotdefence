@@ -112,7 +112,7 @@ export class GridManager {
         this.scene.heroes.push(newHero);
 
         addHeroToCell(targetCell, newHero);
-        this.drawCellBackground(targetCell);
+        this.redrawAllCellBackgrounds();
 
         targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
             const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, targetCell.occupiedHeroes.length, targetCellCenterX, targetCellCenterY);
@@ -204,8 +204,7 @@ export class GridManager {
                 this.scene.tweens.add({ targets: heroInCell, x: targetX, y: targetY, duration: 300, ease: 'Power2' });
             });
         }
-        this.drawCellBackground(oldCell);
-        this.drawCellBackground(targetCell);
+        this.redrawAllCellBackgrounds();
     }
 
 
@@ -227,24 +226,22 @@ export class GridManager {
             const y = top + r * m.cellH;
             this.gridGfx.lineBetween(left, y, right, y);
         }
-        this.gridCells.forEach(cell => this.drawCellBackground(cell));
+        this.redrawAllCellBackgrounds();
     }
 
-    private drawCellBackground(cell: GridCell) {
+    private redrawAllCellBackgrounds() {
         if (!this.cellGfx) return;
-        
-        const { x, y } = cellToWorld(cell.col, cell.row, this.gridMetrics);
-        const cellW = this.gridMetrics.cellW;
-        const cellH = this.gridMetrics.cellH;
-
-        // First, clear the specific cell area
-        this.cellGfx.clearRect(x - cellW / 2, y - cellH / 2, cellW, cellH);
-
-        if (cell.occupiedHeroes.length > 0) {
-            const hero = cell.occupiedHeroes[0];
-            const color = hero.getRankBackgroundColor();
-            this.cellGfx.fillStyle(color, 0.3);
-            this.cellGfx.fillRect(x - cellW / 2, y - cellH / 2, cellW, cellH);
+        this.cellGfx.clear();
+        for (const cell of this.gridCells) {
+            if (cell.occupiedHeroes.length > 0) {
+                const { x, y } = cellToWorld(cell.col, cell.row, this.gridMetrics);
+                const cellW = this.gridMetrics.cellW;
+                const cellH = this.gridMetrics.cellH;
+                const hero = cell.occupiedHeroes[0];
+                const color = hero.getRankBackgroundColor();
+                this.cellGfx.fillStyle(color, 0.3);
+                this.cellGfx.fillRect(x - cellW / 2, y - cellH / 2, cellW, cellH);
+            }
         }
     }
 
