@@ -157,6 +157,7 @@ export class Hero extends Phaser.GameObjects.Image {
         this.scene.tweens.add({
             targets: fireEffect,
             alpha: 0,
+            angle: '+=180', // 180도 회전
             duration: 150, // 0.15초 동안
             ease: 'Power2',
             onComplete: () => {
