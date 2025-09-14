@@ -6,7 +6,7 @@ export const BASE_HP = 100;
 export const SUMMON_COST = 100;
 
 // 보상
-export const GOLD_PER_HP = 0.10;
+export const GOLD_PER_HP = 0.05;
 export const WAVE_CLEAR_BASE = 80;
 export const WAVE_CLEAR_GROWTH = 0.3;
 
