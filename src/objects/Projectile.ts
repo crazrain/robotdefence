@@ -9,11 +9,11 @@ export class Projectile extends Phaser.GameObjects.Arc {
     alive = true;
     target?: Enemy;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, dmg: number, speed: number, target?: Enemy) {
+    constructor(scene: Phaser.Scene, x: number, y: number, dmg: number, speed: number, target: Enemy | undefined, color: number) {
         super(scene, x, y, 6, 0, 360, false);
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        this.setFillStyle(0xffff66, 1);
+        this.setFillStyle(color, 1);
         this.dmg = dmg;
         this.speed = speed;
         this.target = target;

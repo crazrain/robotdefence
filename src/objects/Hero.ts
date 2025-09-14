@@ -141,7 +141,7 @@ export class Hero extends Phaser.GameObjects.Image {
 
         this.scene.sound.play(this.fireSoundKey);
 
-        const p = new Projectile(this.scene, this.x, this.y, this.atk, 600, target);
+        const p = new Projectile(this.scene, this.x, this.y, this.atk, 600, target, this.getRankBackgroundColor());
         const dx = target.x - this.x, dy = target.y - this.y;
         const dist = Math.hypot(dx, dy) || 1;
         p.vx = (dx / dist) * 600;
