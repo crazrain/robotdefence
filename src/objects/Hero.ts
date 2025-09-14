@@ -15,6 +15,7 @@ export class Hero extends Phaser.GameObjects.Image {
     public timeSinceAttack = 0;
     public lastTarget?: Enemy;
     public targetStick = 0;
+    private fireSoundKey: string;
 
     private static heroRankBackgroundColors: Record<HeroRank, number> = {
         'Rank1': 0x808080, // Gray
@@ -27,7 +28,7 @@ export class Hero extends Phaser.GameObjects.Image {
     constructor(scene: Phaser.Scene, x: number, y: number, atk: number, atkInterval: number, range: number, type: HeroType) {
         const heroData = HEROES_DATA.find(h => h.type === type);
         const imageKey = heroData ? heroData.imageKey : 'Basic1';
-
+        
         super(scene, x, y, imageKey);
         this.scene.add.existing(this);
         this.setInteractive();
@@ -36,6 +37,7 @@ export class Hero extends Phaser.GameObjects.Image {
         this.atkInterval = atkInterval;
         this.range = range;
         this.setDisplaySize(28, 28);
+        this.fireSoundKey = heroData ? heroData.imageKey + '_sound' : 'Basic1_sound';
 
         // HeroType을 HeroRank로 매핑
         const heroTypeToRankMap: Record<HeroType, HeroRank> = {
@@ -136,6 +138,8 @@ export class Hero extends Phaser.GameObjects.Image {
         // 씬 유효성 재확인
         // @ts-ignore
         if (!this.scene || !this.scene.sys || !this.scene.sys.isActive) return;
+
+        this.scene.sound.play(this.fireSoundKey);
 
         const p = new Projectile(this.scene, this.x, this.y, this.atk, 600, target);
         const dx = target.x - this.x, dy = target.y - this.y;

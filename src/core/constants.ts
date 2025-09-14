@@ -53,6 +53,7 @@ export interface HeroData {
   name: string;
   imageKey: string; // 코드에서 사용할 이미지 별명
   assetPath: string; // 실제 이미지 파일 경로
+  fireSound: string; // 포 소리 경로
   type: HeroType;
 }
 
@@ -63,6 +64,7 @@ export const HEROES_DATA: HeroData[] = [
     name: 'Warrior',
     imageKey: 'Basic1',
     assetPath: 'assets/images/Basic1.png',
+    fireSound: 'assets/sounds/Basic_Sound.mp3',
     type: 'TypeA',
   },
   {
@@ -70,6 +72,7 @@ export const HEROES_DATA: HeroData[] = [
     name: 'Mage',
     imageKey: 'Rare1',
     assetPath: 'assets/images/Rare1.png',
+    fireSound: 'assets/sounds/Rare_Sound.mp3',
     type: 'TypeB',
   },
   {
@@ -77,6 +80,7 @@ export const HEROES_DATA: HeroData[] = [
     name: 'Archer',
     imageKey: 'Epic1',
     assetPath: 'assets/images/Epic1.png',
+    fireSound: 'assets/sounds/Epic_Sound.mp3',
     type: 'TypeC',
   },
   {
@@ -84,6 +88,7 @@ export const HEROES_DATA: HeroData[] = [
     name: 'Healer',
     imageKey: 'Legendary1',
     assetPath: 'assets/images/Legendary1.png',
+    fireSound: 'assets/sounds/Legendary_Sound.mp3',
     type: 'TypeD',
   },
   {
@@ -91,6 +96,7 @@ export const HEROES_DATA: HeroData[] = [
     name: 'Tanker',
     imageKey: 'Mythical1',
     assetPath: 'assets/images/Mythical1.png',
+    fireSound: 'assets/sounds/Mythical_Sound.mp3',
     type: 'TypeE',
   },
 ];

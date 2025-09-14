@@ -82,6 +82,7 @@ export class GameScene extends Phaser.Scene {
         // HEROES_DATA 배열을 순회하며 모든 영웅 이미지를 로드합니다.
         HEROES_DATA.forEach(hero => {
             this.load.image(hero.imageKey, hero.assetPath);
+            this.load.audio(hero.imageKey + '_sound', hero.fireSound);
         });
     }
 
