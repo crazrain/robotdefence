@@ -144,11 +144,16 @@ export class Hero extends Phaser.GameObjects.Image {
 
         this.scene.sound.play(this.fireSoundKey);
 
+        const angle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y);
+        const offset = 20; // 영웅 크기의 절반 정도
+        const fireX = this.x + Math.cos(angle) * offset;
+        const fireY = this.y + Math.sin(angle) * offset;
+
         // 화염 효과 생성
-        const fireEffect = this.scene.add.sprite(this.x, this.y, this.fireEffectKey);
+        const fireEffect = this.scene.add.sprite(fireX, fireY, this.fireEffectKey);
         fireEffect.setRotation(this.rotation);
         fireEffect.setOrigin(0.5, 0.5);
-        fireEffect.setScale(0.5); // 효과 크기 조절
+        fireEffect.setScale(0.1); // 효과 크기 조절
         this.scene.tweens.add({
             targets: fireEffect,
             alpha: 0,
@@ -159,8 +164,8 @@ export class Hero extends Phaser.GameObjects.Image {
             }
         });
 
-        const p = new Projectile(this.scene, this.x, this.y, this.atk, 600, target, this.getRankBackgroundColor());
-        const dx = target.x - this.x, dy = target.y - this.y;
+        const p = new Projectile(this.scene, fireX, fireY, this.atk, 600, target, this.getRankBackgroundColor());
+        const dx = target.x - fireX, dy = target.y - fireY;
         const dist = Math.hypot(dx, dy) || 1;
         p.vx = (dx / dist) * 600;
         p.vy = (dy / dist) * 600;
