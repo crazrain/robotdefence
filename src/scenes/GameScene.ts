@@ -83,6 +83,7 @@ export class GameScene extends Phaser.Scene {
         HEROES_DATA.forEach(hero => {
             this.load.image(hero.imageKey, hero.assetPath);
             this.load.audio(hero.imageKey + '_sound', hero.fireSound);
+            this.load.image(hero.imageKey + '_effect', hero.fireEffect);
         });
     }
 

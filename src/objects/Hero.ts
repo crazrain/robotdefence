@@ -16,6 +16,7 @@ export class Hero extends Phaser.GameObjects.Image {
     public lastTarget?: Enemy;
     public targetStick = 0;
     private fireSoundKey: string;
+    private fireEffectKey: string;
 
     private static heroRankBackgroundColors: Record<HeroRank, number> = {
         'Rank1': 0x808080, // Gray
@@ -39,6 +40,7 @@ export class Hero extends Phaser.GameObjects.Image {
         this.range = range;
         this.setDisplaySize(heroSize, heroSize);
         this.fireSoundKey = heroData ? heroData.imageKey + '_sound' : 'Basic1_sound';
+        this.fireEffectKey = heroData ? heroData.imageKey + '_effect' : 'Basic1_effect';
 
         // HeroType을 HeroRank로 매핑
         const heroTypeToRankMap: Record<HeroType, HeroRank> = {
@@ -141,6 +143,21 @@ export class Hero extends Phaser.GameObjects.Image {
         if (!this.scene || !this.scene.sys || !this.scene.sys.isActive) return;
 
         this.scene.sound.play(this.fireSoundKey);
+
+        // 화염 효과 생성
+        const fireEffect = this.scene.add.sprite(this.x, this.y, this.fireEffectKey);
+        fireEffect.setRotation(this.rotation);
+        fireEffect.setOrigin(0.5, 0.5);
+        fireEffect.setScale(0.5); // 효과 크기 조절
+        this.scene.tweens.add({
+            targets: fireEffect,
+            alpha: 0,
+            duration: 150, // 0.15초 동안
+            ease: 'Power2',
+            onComplete: () => {
+                fireEffect.destroy();
+            }
+        });
 
         const p = new Projectile(this.scene, this.x, this.y, this.atk, 600, target, this.getRankBackgroundColor());
         const dx = target.x - this.x, dy = target.y - this.y;
