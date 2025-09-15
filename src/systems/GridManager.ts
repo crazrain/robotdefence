@@ -29,6 +29,8 @@ export class GridManager {
     private gridDebug = true;
     private gridMetrics!: GridMetrics;
     private gridCells: GridCell[] = [];
+    private _cachedProbabilities: number[] = [];
+    private _cachedSummonLevel = -1; // 캐시되지 않았음을 나타내는 초기값
 
     constructor(scene: GameScene) {
         this.scene = scene;
@@ -67,9 +69,8 @@ export class GridManager {
             return false;
         }
 
-        const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC', 'TypeD', 'TypeE'];
-        const randomHeroType = heroTypes[(Math.random() * heroTypes.length) | 0];
-
+        // 가중치에 따라 영웅 타입을 결정합니다.
+        const randomHeroType = this.getRandomHeroTypeByWeight();
         const targetCell = this.findTargetCellFor(randomHeroType);
 
         if (!targetCell) {
@@ -289,6 +290,68 @@ export class GridManager {
             }
         }
         return targetCell;
+    }
+
+    private getRandomHeroTypeByWeight(): HeroType {
+        // 소환 레벨이 변경되었을 때만 확률을 다시 계산합니다.
+        if (this.scene.summonLevel !== this._cachedSummonLevel) {
+            this.recalculateProbabilities();
+        }
+
+        const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC', 'TypeD', 'TypeE'];
+        const totalProbability = this._cachedProbabilities.reduce((sum, prob) => sum + prob, 0);
+        let randomValue = Math.random() * totalProbability;
+
+        for (let i = 0; i < this._cachedProbabilities.length; i++) {
+            if (randomValue < this._cachedProbabilities[i]) {
+                return heroTypes[i];
+            }
+            randomValue -= this._cachedProbabilities[i];
+        }
+
+        return heroTypes[0]; // Fallback
+    }
+
+    private recalculateProbabilities() {
+        this._cachedSummonLevel = this.scene.summonLevel;
+
+        const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC', 'TypeD', 'TypeE'];
+
+        // 각 등급별 기본 소환 확률 (%)
+        const baseProbabilities = [78.7, 20, 1, 0.25, 0.05];
+
+        // 소환 레벨에 따른 확률 보정
+        // 레벨이 오를수록 낮은 등급의 확률을 높은 등급으로 이전시킵니다.
+        const probabilities = [...baseProbabilities];
+        const shiftAmount = (this._cachedSummonLevel > 1) ? (this._cachedSummonLevel - 1) * 0.5 : 0; // 레벨 1일때는 확률 이동 없음
+
+        if (shiftAmount > 0) {
+            // 1. 1, 2등급에서 확률을 가져옵니다. (7:3 비율로)
+            const amountFromRank1 = Math.min(probabilities[0], shiftAmount * 0.7);
+            const amountFromRank2 = Math.min(probabilities[1], shiftAmount * 0.3);
+            const totalShiftAmount = amountFromRank1 + amountFromRank2;
+
+            probabilities[0] -= amountFromRank1;
+            probabilities[1] -= amountFromRank2;
+
+            // 2. 가져온 확률을 3, 4, 5등급에 분배합니다. (20:5:1 비율로)
+            const ratioSum = 20 + 5 + 1;
+            probabilities[2] += totalShiftAmount * (20 / ratioSum);
+            probabilities[3] += totalShiftAmount * (5 / ratioSum);
+            probabilities[4] += totalShiftAmount * (1 / ratioSum);
+        }
+
+        this._cachedProbabilities = probabilities;
+
+        // 현재 소환 레벨과 계산된 확률을 콘솔에 출력
+        console.log(`Probabilities recalculated for Summon Level: ${this._cachedSummonLevel}`);
+        console.table({
+            'Rank 1 (%)': probabilities[0].toFixed(2),
+            'Rank 2 (%)': probabilities[1].toFixed(2),
+            'Rank 3 (%)': probabilities[2].toFixed(2),
+            'Rank 4 (%)': probabilities[3].toFixed(2),
+            'Rank 5 (%)': probabilities[4].toFixed(2),
+        });
     }
 
     private repositionHeroesInCell(cell: GridCell) {
