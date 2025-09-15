@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GameScene } from './scenes/GameScene';
+import { EndScene } from './scenes/EndScene';
 import { GAME_WIDTH, GAME_HEIGHT } from './core/constants';
 
 // 문제 줄 삭제했습니다.
@@ -21,5 +22,5 @@ new Phaser.Game({
         default: 'arcade',
         arcade: { debug: false }
     },
-    scene: [GameScene]
+    scene: [GameScene, EndScene]
 });

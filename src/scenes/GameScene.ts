@@ -71,11 +71,6 @@ export class GameScene extends Phaser.Scene {
     private cfg: GameConfig = getDefaultConfig('Normal');
     private round!: RoundTimer;
 
-    // 재시작 처리(씬 pause 미사용: 내부 정지 플래그)
-    private halted = false;
-    private restartBlocker?: Phaser.GameObjects.Rectangle;
-    private restartText?: Phaser.GameObjects.Text;
-
     // 정리 가드 플래그
     private _cleaned = false;
 
@@ -109,7 +104,6 @@ export class GameScene extends Phaser.Scene {
     create() {
         // 새 사이클 시작 초기화
         this._cleaned = false;
-        this.halted = false;
         this.gold = 200;
         this.gameSpeed = 1;
         this.resetRuntimeArrays();
@@ -144,7 +138,7 @@ export class GameScene extends Phaser.Scene {
             this,
             this.spawner,
             this.cfg,
-            (reason) => this.gameOver(reason),
+            (reason) => this.endGame(false, reason),
             () => {},
             () => this.winGame(),
             (waveIndex) => this.grantWaveClearGold(waveIndex) // 웨이브 클리어 보상
@@ -205,15 +199,12 @@ export class GameScene extends Phaser.Scene {
     }
 
     update(_: number, delta: number) {
-        // 전투 정지 상태면 로직 스킵(입력은 살아 있음)
-        if (this.halted) return;
-
         const dt = (delta / 1000) * this.gameSpeed;
 
         // 라운드 타이머
         this.round.update(dt);
         if (this.round.expired) {
-            this.gameOver('라운드 제한 시간 초과');
+            this.endGame(false, '라운드 제한 시간 초과');
             return;
         }
 
@@ -270,71 +261,14 @@ export class GameScene extends Phaser.Scene {
         });
     }
 
-    // ===== 재시작(내부 정지 플래그, pause 미사용) =====
+    // ===== 게임 종료/승리 처리 =====
 
-    private bindRestartOnce() {
-        this.restartBlocker?.once('pointerdown', () => this.doRestart());
-        this.input.keyboard?.once('keydown-SPACE', () => this.doRestart());
-        this.input.keyboard?.once('keydown-ENTER', () => this.doRestart());
-    }
-
-    private doRestart() {
-        // cleanup 호출(리스너/타이머/배열/오버레이 정리)
-        this.cleanup();
-        this._cleaned = false; // 다음 사이클에서 다시 초기화 가능
-
-        // 기본 상태 재설정(안전)
-        this.halted = false;
-        this.gold = 200;
-        this.gameSpeed = 1;
-        this.gridManager.reset();
-        this.resetRuntimeArrays();
-
-        this.scene.restart(); // → SHUTDOWN → 새 create()
-    }
-
-    private gameOver(reason: string) {
-        this.halted = true;
-
-        this.restartBlocker = this.add
-            .rectangle(this.scale.width / 2, this.scale.height / 2, this.scale.width, this.scale.height, 0x000000, 0.6)
-            .setDepth(10)
-            .setInteractive();
-
-        this.restartText = this.add
-            .text(
-                this.scale.width / 2,
-                this.scale.height / 2,
-                `게임 오버\n${reason}\n탭(또는 스페이스/엔터)하면 재시작`,
-                { color: '#fff', fontSize: '32px', fontFamily: 'monospace', align: 'center' }
-            )
-            .setOrigin(0.5)
-            .setDepth(11);
-
-        this.tweens.pauseAll();
-        this.bindRestartOnce();
+    private endGame(didWin: boolean, reason: string) {
+        this.scene.start('EndScene', { didWin, reason });
     }
 
     private winGame() {
-        this.halted = true;
-
-        this.restartBlocker = this.add
-            .rectangle(this.scale.width / 2, this.scale.height / 2, this.scale.width, this.scale.height, 0x000000, 0.6)
-            .setDepth(10)
-            .setInteractive();
-
-        this.restartText = this.add
-            .text(
-                this.scale.width / 2,
-                this.scale.height / 2,
-                '클리어!\n탭(또는 스페이스/엔터)하면 재시작',
-                { color: '#fff', fontSize: '36px', fontFamily: 'monospace', align: 'center' }
-            )
-            .setOrigin(0.5)
-            .setDepth(11);
-
-        this.tweens.pauseAll();
-        this.bindRestartOnce();
+        this.endGame(true, '모든 웨이브를 막아냈습니다!');
     }
 
     // ===== 정리 유틸 =====
@@ -368,8 +302,6 @@ export class GameScene extends Phaser.Scene {
         this.gridManager.cleanup(hard);
 
         // 오버레이/UI
-        this.restartBlocker?.destroy();
-        this.restartText?.destroy();
         this.summonButton?.container.destroy(); // SummonButton 컨테이너 파괴 추가
         this.speedControlButton?.destroy();
         this.volumeLabel?.destroy();
