@@ -21,11 +21,11 @@ export class Hero extends Phaser.GameObjects.Image {
     public cell: GridCell | null = null; // 자신이 속한 셀 정보
 
     private static heroRankBackgroundColors: { [key: number]: number } = {
-        1: 0x808080, // Gray
-        2: 0x0000ff, // Blue
-        3: 0x800080, // Purple
-        4: 0xffa500, // Orange
-        5: 0xff0000, // Red
+        1: 0x95a5a6, // Gray (연한 회색)
+        2: 0x3498db, // Blue (부드러운 파란색)
+        3: 0x9b59b6, // Purple (부드러운 보라색)
+        4: 0xf39c12, // Orange (선명한 주황색)
+        5: 0xe74c3c, // Red (선명한 빨간색)
     };
 
     constructor(scene: Phaser.Scene, x: number, y: number, atk: number, atkInterval: number, range: number, type: HeroType) {
