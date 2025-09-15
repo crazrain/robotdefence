@@ -14,7 +14,7 @@ import {
     MAX_HEROES_PER_CELL
 } from '../core/Grid';
 import { Hero } from '../objects/Hero';
-import { HERO_MOVE_RANGE, MAX_HEROES, HERO_SUMMON_COST } from '../core/constants';
+import { HERO_MOVE_RANGE, MAX_HEROES, HERO_SUMMON_COST, THEME } from '../core/constants';
 import type { HeroType } from '../core/types';
 
 export class GridManager {
@@ -63,7 +63,7 @@ export class GridManager {
 
     public trySummonHero() {
         if (this.scene.heroes.length >= MAX_HEROES) {
-            this.scene.toast(`영웅은 ${MAX_HEROES}명까지 소환할 수 있습니다`, '#ff7777');
+            this.scene.toast(`영웅은 ${MAX_HEROES}명까지 소환할 수 있습니다`, THEME.danger);
             return false;
         }
 
@@ -96,7 +96,7 @@ export class GridManager {
         }
 
         if (!targetCell) {
-            this.scene.toast('배치 가능한 자리가 없습니다', '#ff7777');
+            this.scene.toast('배치 가능한 자리가 없습니다', THEME.danger);
             return false;
         }
 

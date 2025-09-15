@@ -1,6 +1,6 @@
 // src/ui/Toast.ts
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT } from '../core/constants';
+import { GAME_WIDTH, GAME_HEIGHT, THEME } from '../core/constants';
 
 export class Toast {
     private scene: Phaser.Scene;
@@ -9,12 +9,12 @@ export class Toast {
         this.scene = scene;
     }
 
-    public show(msg: string, color = '#ffeb3b') {
+    public show(msg: string, color = THEME.warning) {
         const toastText = this.scene.add
             .text(GAME_WIDTH / 2, GAME_HEIGHT - 220, msg, {
                 color,
                 fontSize: '22px',
-                fontFamily: 'monospace',
+                fontFamily: THEME.font,
             })
             .setOrigin(0.5)
             .setAlpha(0);

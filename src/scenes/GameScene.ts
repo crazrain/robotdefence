@@ -9,6 +9,7 @@ import {
     WAVE_CLEAR_BASE,
     WAVE_CLEAR_GROWTH,
     HEROES_DATA,
+    THEME,
     HERO_SUMMON_COST,
 } from '../core/constants';
 import { buildBottomLoop, buildTopLoop } from '../core/Path';
@@ -82,11 +83,11 @@ export class GameScene extends Phaser.Scene {
     // 적 처치 보상 핸들러(해제 위해 필드로 유지)
     private enemyKilledHandler = (payload: { x: number; y: number; maxHp: number; bounty: number }) => {
         this.gold += payload.bounty;
-        const t = this.add
+        const t = this.add // 골드 획득 텍스트
             .text(payload.x, payload.y - 18, `+${payload.bounty}`, {
-                color: '#ffd54f',
+                color: THEME.warning,
                 fontSize: '18px',
-                fontFamily: 'monospace'
+                fontFamily: THEME.font
             })
             .setOrigin(0.5)
             .setDepth(20);
@@ -113,7 +114,7 @@ export class GameScene extends Phaser.Scene {
         this.gameSpeed = 1;
         this.resetRuntimeArrays();
 
-        this.cameras.main.setBackgroundColor('#101018');
+        this.cameras.main.setBackgroundColor(THEME.background);
 
         // 경로 디버그(상단 루프)
         for (let i = 0; i < this.waypointsTop.length; i++) {
@@ -167,7 +168,7 @@ export class GameScene extends Phaser.Scene {
                         this.onHeroSummoned();
                     }
                 } else {
-                    this.toast.show(`골드가 부족합니다! (필요: ${HERO_SUMMON_COST})`, '#ff5252');
+                    this.toast.show(`골드가 부족합니다! (필요: ${HERO_SUMMON_COST})`, THEME.danger);
                 }
             });
             this.summonButton.create();
@@ -180,14 +181,14 @@ export class GameScene extends Phaser.Scene {
         });
 
         // 볼륨 슬라이더 UI 추가
-        this.volumeLabel = this.add.text(this.volumeUiX, this.volumeLabelY, 'Volume:', { color: '#fff', fontSize: '18px', fontFamily: 'monospace' }).setOrigin(1, 0.5).setDepth(10); // Origin(1, 0.5)로 오른쪽 정렬
-        this.volumeValueText = this.add.text(this.volumeUiX + 5, this.volumeLabelY, `${Math.round(this.sound.volume * 100)}%`, { color: '#fff', fontSize: '18px', fontFamily: 'monospace' }).setOrigin(0, 0.5).setDepth(10); // Origin(0, 0.5)로 왼쪽 정렬
-        this.volumeBackground = this.add.rectangle(this.volumeUiX, this.volumeSliderY, this.volumeSliderWidth, this.volumeSliderHeight, 0x333333).setDepth(10);
+        this.volumeLabel = this.add.text(this.volumeUiX, this.volumeLabelY, 'Volume:', { color: THEME.text, fontSize: '18px', fontFamily: THEME.font }).setOrigin(1, 0.5).setDepth(10); // Origin(1, 0.5)로 오른쪽 정렬
+        this.volumeValueText = this.add.text(this.volumeUiX + 5, this.volumeLabelY, `${Math.round(this.sound.volume * 100)}%`, { color: THEME.text, fontSize: '18px', fontFamily: THEME.font }).setOrigin(0, 0.5).setDepth(10); // Origin(0, 0.5)로 왼쪽 정렬
+        this.volumeBackground = this.add.rectangle(this.volumeUiX, this.volumeSliderY, this.volumeSliderWidth, this.volumeSliderHeight, THEME.neutral).setDepth(10);
         this.volumeBorder = this.add.graphics().setDepth(10); // 외곽선 추가
-        this.volumeBorder.lineStyle(2, 0x888888, 1); // 외곽선 스타일
+        this.volumeBorder.lineStyle(2, parseInt(THEME.neutral_dark.substring(1), 16), 1); // 외곽선 스타일
         this.volumeBorder.strokeRect(this.volumeUiX - this.volumeSliderWidth, this.volumeSliderY - this.volumeSliderHeight / 2, this.volumeSliderWidth * 2, this.volumeSliderHeight);
 
-        this.volumeSlider = this.add.rectangle(this.volumeUiX, this.volumeSliderY, this.volumeSliderWidth, this.volumeSliderHeight, 0xffffff).setDepth(11);
+        this.volumeSlider = this.add.rectangle(this.volumeUiX, this.volumeSliderY, this.volumeSliderWidth, this.volumeSliderHeight, parseInt(THEME.primary.substring(1), 16)).setDepth(11);
         this.volumeSlider.setInteractive();
 
         // 드래그 범위 계산
@@ -263,13 +264,13 @@ export class GameScene extends Phaser.Scene {
     private grantWaveClearGold(waveIndex: number) {
         const bonus = Math.max(1, Math.floor(WAVE_CLEAR_BASE * Math.pow(1 + WAVE_CLEAR_GROWTH, waveIndex)));
         this.gold += bonus;
-        this.toast.show(`웨이브 클리어 보상 +${bonus}`, '#77ff77');
+        this.toast.show(`웨이브 클리어 보상 +${bonus}`, THEME.success);
     }
 
     // GridManager가 호출할 콜백
     public onHeroSummoned() {
         this.gold -= HERO_SUMMON_COST;
-        this.toast.show(`영웅 소환! (-${HERO_SUMMON_COST}G)`, '#4caf50');
+        this.toast.show(`영웅 소환! (-${HERO_SUMMON_COST}G)`, THEME.primary);
     }
 
 

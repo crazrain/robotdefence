@@ -1,6 +1,20 @@
 export const GAME_WIDTH = 720;
 export const GAME_HEIGHT = 1280;
 
+// === 테마 색상 ===
+export const THEME = {
+    background: '#101018',
+    text: '#ffffff',
+    text_light: '#bbbbbb',
+    primary: '#4caf50',
+    success: '#77ff77',
+    warning: '#ffeb3b',
+    danger: '#ff5252',
+    neutral: '#333333',
+    neutral_dark: '#888888',
+    font: 'monospace',
+};
+
 export const MAX_ALIVE = 100;
 export const BASE_HP = 100;
 
