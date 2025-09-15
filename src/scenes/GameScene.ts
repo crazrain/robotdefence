@@ -25,6 +25,7 @@ import { RoundTimer } from '../systems/RoundTimer';
 import { Hero } from '../objects/Hero';
 import { GridManager } from '../systems/GridManager';
 import { SpeedControlButton } from '../ui/SpeedControlButton';
+import { Toast } from '../ui/Toast';
 
 export class GameScene extends Phaser.Scene {
     // 경로(상·하 루프)
@@ -46,6 +47,7 @@ export class GameScene extends Phaser.Scene {
     gridManager!: GridManager;
     speedControlButton!: SpeedControlButton;
 
+    private toast!: Toast;
     // 볼륨 UI 요소
     private volumeLabel?: Phaser.GameObjects.Text;
     private volumeBackground?: Phaser.GameObjects.Rectangle;
@@ -131,6 +133,9 @@ export class GameScene extends Phaser.Scene {
         // HUD
         this.hud = new HUD(this);
         this.hud.create();
+
+        // 토스트 메시지 유틸리티
+        this.toast = new Toast(this);
 
         // 시스템
         this.spawner = new Spawner(this, this.waypointsTop, this.waypointsBottom);
@@ -240,28 +245,8 @@ export class GameScene extends Phaser.Scene {
     private grantWaveClearGold(waveIndex: number) {
         const bonus = Math.max(1, Math.floor(WAVE_CLEAR_BASE * Math.pow(1 + WAVE_CLEAR_GROWTH, waveIndex)));
         this.gold += bonus;
-        this.toast(`웨이브 클리어 보상 +${bonus}`, '#77ff77');
+        this.toast.show(`웨이브 클리어 보상 +${bonus}`, '#77ff77');
     }
-
-    public toast(msg: string, color = '#ffeb3b') {
-        const t = this.add
-            .text(GAME_WIDTH / 2, GAME_HEIGHT - 220, msg, { color, fontSize: '22px', fontFamily: 'monospace' })
-            .setOrigin(0.5)
-            .setAlpha(0);
-        this.tweens.add({
-            targets: t,
-            alpha: 1,
-            y: t.y - 20,
-            duration: 200,
-            onComplete: () => {
-                this.time.delayedCall(700, () => {
-                    this.tweens.add({ targets: t, alpha: 0, y: t.y - 10, duration: 200, onComplete: () => t.destroy() });
-                });
-            }
-        });
-    }
-
-    // ===== 게임 종료/승리 처리 =====
 
     private endGame(didWin: boolean, reason: string) {
         this.scene.start('EndScene', { didWin, reason });
