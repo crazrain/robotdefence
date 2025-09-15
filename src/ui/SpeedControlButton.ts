@@ -22,7 +22,9 @@ export class SpeedControlButton extends Phaser.GameObjects.Container {
         const spacing = 45;
 
         this.speeds.forEach((speed, index) => {
-            const buttonContainer = this.scene.add.container((index - (this.speeds.length - 1) / 2) * spacing, 0);
+            // 오른쪽 끝에서부터 왼쪽으로 버튼을 배치합니다.
+            // 마지막 버튼(4x)이 x: 0 에 위치하게 됩니다.
+            const buttonContainer = this.scene.add.container((index - (this.speeds.length - 1)) * spacing, 0);
 
             const background = this.scene.add.graphics();
             const text = this.scene.add.text(0, 0, `${speed}x`, {

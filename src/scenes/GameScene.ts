@@ -63,7 +63,7 @@ export class GameScene extends Phaser.Scene {
     private volumeBorder?: Phaser.GameObjects.Graphics;
 
     // 볼륨 슬라이더 상수
-    private readonly volumeUiX = GAME_WIDTH - 100; // 오른쪽 여백 100px
+    private readonly volumeUiX = 100; // 왼쪽 여백 100px
     private readonly volumeLabelY = 90;
     private readonly volumeSliderY = 120;
     private readonly volumeSliderWidth = 90;
@@ -187,14 +187,14 @@ export class GameScene extends Phaser.Scene {
         });
         this.modeSelector.show();
 
-        this.speedControlButton = new SpeedControlButton(this, GAME_WIDTH - 70, 50);
+        this.speedControlButton = new SpeedControlButton(this, GAME_WIDTH - 20, this.volumeSliderY);
         this.events.on('speedChanged', (speed: number) => {
             this.gameSpeed = speed;
         });
 
         // 볼륨 슬라이더 UI 추가
-        this.volumeLabel = this.add.text(this.volumeUiX, this.volumeLabelY, 'Volume:', { color: THEME.text, fontSize: '18px', fontFamily: THEME.font }).setOrigin(1, 0.5).setDepth(10); // Origin(1, 0.5)로 오른쪽 정렬
-        this.volumeValueText = this.add.text(this.volumeUiX + 5, this.volumeLabelY, `${Math.round(this.sound.volume * 100)}%`, { color: THEME.text, fontSize: '18px', fontFamily: THEME.font }).setOrigin(0, 0.5).setDepth(10); // Origin(0, 0.5)로 왼쪽 정렬
+        this.volumeLabel = this.add.text(this.volumeUiX, this.volumeLabelY, 'Volume:', { color: THEME.text, fontSize: '18px', fontFamily: THEME.font }).setOrigin(0, 0.5).setDepth(10); // Origin(0, 0.5)로 왼쪽 정렬
+        this.volumeValueText = this.add.text(this.volumeUiX + 75, this.volumeLabelY, `${Math.round(this.sound.volume * 100)}%`, { color: THEME.text, fontSize: '18px', fontFamily: THEME.font }).setOrigin(0, 0.5).setDepth(10); // 위치 조정
         this.volumeBackground = this.add.rectangle(this.volumeUiX, this.volumeSliderY, this.volumeSliderWidth, this.volumeSliderHeight, THEME.neutral).setDepth(10);
         this.volumeBorder = this.add.graphics().setDepth(10); // 외곽선 추가
         this.volumeBorder.lineStyle(2, parseInt(THEME.neutral_dark.substring(1), 16), 1); // 외곽선 스타일
