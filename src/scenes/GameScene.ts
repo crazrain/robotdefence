@@ -185,7 +185,7 @@ export class GameScene extends Phaser.Scene {
         this.volumeBackground = this.add.rectangle(this.volumeUiX, this.volumeSliderY, this.volumeSliderWidth, this.volumeSliderHeight, 0x333333).setDepth(10);
         this.volumeBorder = this.add.graphics().setDepth(10); // 외곽선 추가
         this.volumeBorder.lineStyle(2, 0x888888, 1); // 외곽선 스타일
-        this.volumeBorder.strokeRect(this.volumeUiX - this.volumeSliderWidth / 2, this.volumeSliderY - this.volumeSliderHeight / 2, this.volumeSliderWidth, this.volumeSliderHeight);
+        this.volumeBorder.strokeRect(this.volumeUiX - this.volumeSliderWidth, this.volumeSliderY - this.volumeSliderHeight / 2, this.volumeSliderWidth * 2, this.volumeSliderHeight);
 
         this.volumeSlider = this.add.rectangle(this.volumeUiX, this.volumeSliderY, this.volumeSliderWidth, this.volumeSliderHeight, 0xffffff).setDepth(11);
         this.volumeSlider.setInteractive();
