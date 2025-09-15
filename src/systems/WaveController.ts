@@ -97,7 +97,8 @@ export class WaveController {
         const allSpawned = this.rt.bottomToSpawn === 0;
 
         // 웨이브 시간 종료 정책
-        if (this.rt.timeLeft <= 0) {
+        const isLastWave = this.rt.index === this.waves.length - 1;
+        if (this.rt.timeLeft <= 0 && !isLastWave) { // 마지막 웨이브가 아닐 때만 시간 종료로 클리어
             this.onWaveCleared(this.rt.index);
             this.nextOrWin(_mode);
             return;
