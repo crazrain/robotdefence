@@ -2,8 +2,8 @@
 
 import Phaser from 'phaser';
 import { GridCell } from '../core/Grid';
-import type { HeroType, HeroRank } from '../core/types'; // HeroType, HeroRank 임포트
-import { HEROES_DATA } from '../core/constants';
+import type { HeroType } from '../core/types'; // HeroType, HeroRank 임포트
+import { HEROES_DATA, HERO_SELL_RETURN_RATE } from '../core/constants';
 import { Enemy } from './Enemy';
 import { Projectile } from './Projectile';
 
@@ -26,6 +26,14 @@ export class Hero extends Phaser.GameObjects.Image {
         3: 0x9b59b6, // Purple (부드러운 보라색)
         4: 0xf39c12, // Orange (선명한 주황색)
         5: 0xe74c3c, // Red (선명한 빨간색)
+    };
+
+    private static heroRankValues: { [key: number]: number } = {
+        1: 100,   // 1등급 영웅의 가치
+        2: 300,   // 2등급 영웅의 가치
+        3: 900,   // 3등급 영웅의 가치
+        4: 2700,  // 4등급 영웅의 가치
+        5: 8100,  // 5등급 영웅의 가치
     };
 
     constructor(scene: Phaser.Scene, x: number, y: number, atk: number, atkInterval: number, range: number, type: HeroType) {
@@ -57,6 +65,11 @@ export class Hero extends Phaser.GameObjects.Image {
 
     public getRankBackgroundColor(): number {
         return Hero.heroRankBackgroundColors[this.rank] || 0x808080; // 숫자 키로 조회
+    }
+
+    public getSellPrice(): number {
+        const value = Hero.heroRankValues[this.rank] || 0;
+        return Math.floor(value * HERO_SELL_RETURN_RATE);
     }
 
     // 셀 내에서 영웅의 상대적인 위치를 조정하는 메서드

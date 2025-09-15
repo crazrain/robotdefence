@@ -11,8 +11,7 @@ import {
     HEROES_DATA,
     THEME,
     HERO_SUMMON_COST,
-    HERO_SELL_BASE_RETURN_RATE,
-    HERO_SELL_RANK_BONUS_RATE,
+    HERO_SELL_RETURN_RATE,
 } from '../core/constants';
 import { buildBottomLoop, buildTopLoop } from '../core/Path';
 import type { Mode } from '../core/types';
@@ -294,14 +293,12 @@ export class GameScene extends Phaser.Scene {
     }
 
     private sellHero(hero: Hero) {
-        // 판매 가격 계산: (기본 소환 비용 * 기본 반환율) + (기본 소환 비용 * 등급별 보너스 * (등급-1))
-        const baseSellPrice = HERO_SUMMON_COST * HERO_SELL_BASE_RETURN_RATE;
-        const rankBonus = HERO_SUMMON_COST * HERO_SELL_RANK_BONUS_RATE * (hero.rank - 1);
-        const sellPrice = Math.floor(baseSellPrice + rankBonus);
+        const sellPrice = hero.getSellPrice();
 
         this.gold += sellPrice;
         this.toast.show(`${hero.rank}등급 영웅 판매 (+${sellPrice}G)`, THEME.success);
         this.gridManager.removeHero(hero);
+        this.gridManager.clearSelection(); // 판매 후 선택 상태 해제
         this.heroActionPanel.hide();
     }
 

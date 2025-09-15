@@ -1,6 +1,6 @@
 // src/ui/HeroActionPanel.ts
 import Phaser from 'phaser';
-import { THEME, HERO_SUMMON_COST, HERO_SELL_BASE_RETURN_RATE, HERO_SELL_RANK_BONUS_RATE } from '../core/constants';
+import { THEME } from '../core/constants';
 import { Hero } from '../objects/Hero';
 
 export class HeroActionPanel {
@@ -96,14 +96,13 @@ export class HeroActionPanel {
         this.container.setVisible(true);
 
         // 판매 가격 계산 및 텍스트 업데이트
-        const baseSellPrice = HERO_SUMMON_COST * HERO_SELL_BASE_RETURN_RATE;
-        const rankBonus = HERO_SUMMON_COST * HERO_SELL_RANK_BONUS_RATE * (hero.rank - 1);
-        const sellPrice = Math.floor(baseSellPrice + rankBonus);
+        const sellPrice = hero.getSellPrice();
 
-        const isMaxRank = hero.rank >= 5; // 최고 등급 확인
+        const isRank5 = hero.rank >= 5; // 5등급 (최고 등급)
+        const isRank4 = hero.rank === 4; // 4등급
 
         // 합성 가능 여부 확인: 같은 등급의 영웅 3명이 한 셀에 있고, 최고 등급이 아닐 때
-        const canCombine = hero.cell && hero.cell.occupiedHeroes.length === 3 && !isMaxRank && hero.cell.occupiedHeroes.every(h => h.rank === hero.rank);
+        const canCombine = hero.cell && hero.cell.occupiedHeroes.length === 3 && !isRank5 && !isRank4 && hero.cell.occupiedHeroes.every(h => h.rank === hero.rank);
 
         this.background.clear(); // 이전 배경 지우기
 
@@ -117,8 +116,8 @@ export class HeroActionPanel {
             this.background.fillRoundedRect(-150, -40, 300, 80, 10); // 넓은 배경
             this.background.lineStyle(2, 0xffffff, 0.5);
             this.background.strokeRoundedRect(-150, -40, 300, 80, 10);
-        } else if (isMaxRank) {
-            // 1개 버튼: 업그레이드 (최고 등급)
+        } else if (isRank5) {
+            // 5등급: '업그레이드' 버튼만 표시 (판매 불가)
             this.upgradeButtonContainer.setVisible(true).setPosition(0, 0);
             this.sellButtonContainer.setVisible(false);
             this.combineButtonContainer.setVisible(false);
@@ -128,7 +127,7 @@ export class HeroActionPanel {
             this.background.lineStyle(2, 0xffffff, 0.5);
             this.background.strokeRoundedRect(-50, -40, 100, 80, 10);
         } else {
-            // 2개 버튼: 업그레이드, 판매
+            // 1~4등급 (합성 불가 시): '업그레이드', '판매' 버튼 표시
             this.upgradeButtonContainer.setVisible(true).setPosition(-50, 0);
             this.sellButtonContainer.setVisible(true).setPosition(50, 0);
             this.combineButtonContainer.setVisible(false);
