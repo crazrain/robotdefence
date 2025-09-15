@@ -9,7 +9,10 @@ export class HeroActionPanel {
     private hero: Hero | null = null;
 
     private upgradeButtonText!: Phaser.GameObjects.Text;
+    private upgradeButtonContainer!: Phaser.GameObjects.Container;
     private sellButtonText!: Phaser.GameObjects.Text;
+    private sellButtonContainer!: Phaser.GameObjects.Container;
+    private background!: Phaser.GameObjects.Graphics;
 
     private onUpgrade: (hero: Hero) => void;
     private onSell: (hero: Hero) => void;
@@ -26,11 +29,11 @@ export class HeroActionPanel {
     }
 
     private createPanel() {
-        const background = this.scene.add.graphics();
-        background.fillStyle(0x000000, 0.7);
-        background.fillRoundedRect(-100, -40, 200, 80, 10);
-        background.lineStyle(2, 0xffffff, 0.5);
-        background.strokeRoundedRect(-100, -40, 200, 80, 10);
+        this.background = this.scene.add.graphics();
+        this.background.fillStyle(0x000000, 0.7);
+        this.background.fillRoundedRect(-100, -40, 200, 80, 10);
+        this.background.lineStyle(2, 0xffffff, 0.5);
+        this.background.strokeRoundedRect(-100, -40, 200, 80, 10);
 
         const { container: upgradeButton, text: upgradeText } = this.createButton('업그레이드', -50, 0, () => {
             if (this.hero) this.onUpgrade(this.hero);
@@ -39,10 +42,12 @@ export class HeroActionPanel {
             if (this.hero) this.onSell(this.hero);
         });
 
+        this.upgradeButtonContainer = upgradeButton;
         this.upgradeButtonText = upgradeText;
+        this.sellButtonContainer = sellButton;
         this.sellButtonText = sellText;
 
-        this.container.add([background, upgradeButton, sellButton]);
+        this.container.add([this.background, upgradeButton, sellButton]);
     }
 
     private createButton(text: string, x: number, y: number, onClick: () => void): {
@@ -86,8 +91,32 @@ export class HeroActionPanel {
         const rankBonus = HERO_SUMMON_COST * HERO_SELL_RANK_BONUS_RATE * (hero.rank - 1);
         const sellPrice = Math.floor(baseSellPrice + rankBonus);
 
-        this.sellButtonText.setText(`판매\n(+${sellPrice}G)`);
-        this.upgradeButtonText.setText(`업그레이드\n(준비중)`);
+        const isMaxRank = hero.rank >= 5; // 최고 등급 확인
+
+        this.background.clear(); // 이전 배경 지우기
+
+        if (isMaxRank) {
+            // 최고 등급: 판매 버튼 숨기고, 업그레이드 버튼을 중앙으로 이동, 패널 크기 축소
+            this.sellButtonContainer.setVisible(false);
+            this.upgradeButtonContainer.setVisible(true).setPosition(0, 0); // 중앙으로
+            this.upgradeButtonText.setText(`업그레이드\n(준비중)`);
+
+            this.background.fillStyle(0x000000, 0.7);
+            this.background.fillRoundedRect(-50, -40, 100, 80, 10); // 작은 배경
+            this.background.lineStyle(2, 0xffffff, 0.5);
+            this.background.strokeRoundedRect(-50, -40, 100, 80, 10);
+        } else {
+            // 일반 등급: 모든 버튼 표시 및 원래 위치/크기로 설정
+            this.sellButtonContainer.setVisible(true);
+            this.upgradeButtonContainer.setVisible(true).setPosition(-50, 0); // 원래 위치로
+            this.upgradeButtonText.setText(`업그레이드\n(준비중)`);
+            this.sellButtonText.setText(`판매\n(+${sellPrice}G)`);
+
+            this.background.fillStyle(0x000000, 0.7);
+            this.background.fillRoundedRect(-100, -40, 200, 80, 10); // 원래 배경
+            this.background.lineStyle(2, 0xffffff, 0.5);
+            this.background.strokeRoundedRect(-100, -40, 200, 80, 10);
+        }
     }
 
     public hide() {
