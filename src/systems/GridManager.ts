@@ -130,6 +130,10 @@ export class GridManager {
         const clickedGameObjects = this.scene.input.manager.hitTest(pointer, this.scene.children.list, this.scene.cameras.main);
         const clickedHero = clickedGameObjects.find(obj => obj instanceof Hero) as Hero | undefined;
 
+        // 액션 패널이 보이는 상태에서 다른 곳을 클릭하면 패널을 숨김
+        if (this.scene.heroActionPanel.isVisible() && !clickedHero) {
+            this.scene.heroActionPanel.hide();
+        }
         if (this.selectedCell && this.selectedHero) {
             const clickedCellCoords = worldToCell(pointer.worldX, pointer.worldY, this.gridMetrics);
 
@@ -167,6 +171,7 @@ export class GridManager {
             this.selectedHero = clickedHero;
             this.drawRangeDisplay(clickedHero);
             this.drawMovableCells();
+            this.scene.heroActionPanel.show(clickedHero); // 액션 패널 표시
         } else {
             this.clearSelection();
         }
@@ -203,6 +208,22 @@ export class GridManager {
         this.redrawAllCellBackgrounds();
     }
 
+    public removeHero(heroToRemove: Hero) {
+        const cell = this.gridCells.find(c => c.occupiedHeroes.includes(heroToRemove));
+        if (cell) {
+            removeHeroFromCell(cell, heroToRemove);
+            this.redrawAllCellBackgrounds();
+
+            // 남은 영웅들 위치 재조정
+            const { x: cellCenterX, y: cellCenterY } = cellToWorld(cell.col, cell.row, this.gridMetrics);
+            cell.occupiedHeroes.forEach((heroInCell, idx) => {
+                const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, cell.occupiedHeroes.length, cellCenterX, cellCenterY);
+                this.scene.tweens.add({ targets: heroInCell, x: targetX, y: targetY, duration: 300, ease: 'Power2' });
+            });
+        }
+        heroToRemove.destroy();
+        this.scene.heroes = this.scene.heroes.filter(h => h !== heroToRemove);
+    }
 
     private drawGridDebug() {
         if (!this.gridGfx) return;
@@ -258,6 +279,7 @@ export class GridManager {
         this.selectedCell = null;
         this.selectedHero = null;
         this.clearMovableCells();
+        this.scene.heroActionPanel.hide();
     }
 
     private calculateMovableCells(currentCell: GridCell): GridCell[] {

@@ -8,7 +8,7 @@ import { Projectile } from './Projectile';
 
 export class Hero extends Phaser.GameObjects.Image {
     public type: HeroType; // 영웅 종류 속성 추가
-    public rank: HeroRank; // 영웅 등급 속성 추가
+    public rank: number; // 영웅 등급 속성 (숫자 타입으로 변경)
     public atk: number;
     public atkInterval: number;
     public range: number;
@@ -18,12 +18,12 @@ export class Hero extends Phaser.GameObjects.Image {
     private fireSoundKey: string;
     private fireEffectKey: string;
 
-    private static heroRankBackgroundColors: Record<HeroRank, number> = {
-        'Rank1': 0x808080, // Gray
-        'Rank2': 0x0000ff, // Blue
-        'Rank3': 0x800080, // Purple
-        'Rank4': 0xffa500, // Orange
-        'Rank5': 0xff0000, // Red
+    private static heroRankBackgroundColors: { [key: number]: number } = {
+        1: 0x808080, // Gray
+        2: 0x0000ff, // Blue
+        3: 0x800080, // Purple
+        4: 0xffa500, // Orange
+        5: 0xff0000, // Red
     };
 
     constructor(scene: Phaser.Scene, x: number, y: number, atk: number, atkInterval: number, range: number, type: HeroType) {
@@ -43,18 +43,18 @@ export class Hero extends Phaser.GameObjects.Image {
         this.fireEffectKey = heroData ? heroData.imageKey + '_effect' : 'Basic1_effect';
 
         // HeroType을 HeroRank로 매핑
-        const heroTypeToRankMap: Record<HeroType, HeroRank> = {
-            'TypeA': 'Rank1',
-            'TypeB': 'Rank2',
-            'TypeC': 'Rank3',
-            'TypeD': 'Rank4',
-            'TypeE': 'Rank5',
+        const heroTypeToRankMap: Record<HeroType, number> = {
+            'TypeA': 1,
+            'TypeB': 2,
+            'TypeC': 3,
+            'TypeD': 4,
+            'TypeE': 5,
         };
         this.rank = heroTypeToRankMap[this.type]; // 영웅 등급 설정
     }
 
     public getRankBackgroundColor(): number {
-        return Hero.heroRankBackgroundColors[this.rank] || 0x808080;
+        return Hero.heroRankBackgroundColors[this.rank] || 0x808080; // 숫자 키로 조회
     }
 
     // 셀 내에서 영웅의 상대적인 위치를 조정하는 메서드

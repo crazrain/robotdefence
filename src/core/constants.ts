@@ -25,6 +25,10 @@ export const WAVE_CLEAR_GROWTH = 0.1;
 
 export const HERO_SUMMON_COST = 100;
 
+// 영웅 판매/업그레이드
+export const HERO_SELL_BASE_RETURN_RATE = 0.5; // 기본 판매가 반환 비율
+export const HERO_SELL_RANK_BONUS_RATE = 0.1;  // 등급당 추가 반환 비율
+
 // 하단 루프 사각형
 export const LOOP_RECT_BOTTOM = {
     left: 100, right: 620, top: 680, bottom: 980

@@ -11,6 +11,8 @@ import {
     HEROES_DATA,
     THEME,
     HERO_SUMMON_COST,
+    HERO_SELL_BASE_RETURN_RATE,
+    HERO_SELL_RANK_BONUS_RATE,
 } from '../core/constants';
 import { buildBottomLoop, buildTopLoop } from '../core/Path';
 import type { Mode } from '../core/types';
@@ -28,6 +30,7 @@ import { Hero } from '../objects/Hero';
 import { GridManager } from '../systems/GridManager';
 import { SpeedControlButton } from '../ui/SpeedControlButton';
 import { Toast } from '../ui/Toast';
+import { HeroActionPanel } from '../ui/HeroActionPanel';
 
 const VOLUME_STORAGE_KEY = 'robot-defence-volume';
 
@@ -50,6 +53,7 @@ export class GameScene extends Phaser.Scene {
     waves!: WaveController;
     gridManager!: GridManager;
     speedControlButton!: SpeedControlButton;
+    heroActionPanel!: HeroActionPanel;
 
     private toast!: Toast;
     // 볼륨 UI 요소
@@ -153,6 +157,11 @@ export class GameScene extends Phaser.Scene {
             (waveIndex) => this.grantWaveClearGold(waveIndex) // 웨이브 클리어 보상
         );
         this.gridManager = new GridManager(this);
+        this.heroActionPanel = new HeroActionPanel(
+            this,
+            (hero) => this.upgradeHero(hero),
+            (hero) => this.sellHero(hero)
+        );
 
 
         // 적 처치 보상 수신
@@ -273,6 +282,25 @@ export class GameScene extends Phaser.Scene {
         this.toast.show(`영웅 소환! (-${HERO_SUMMON_COST}G)`, THEME.primary);
     }
 
+    private upgradeHero(hero: Hero) {
+        // TODO: 업그레이드 비용 계산 및 골드 차감 로직
+        console.log(`${hero.type} 영웅 업그레이드 시도`);
+        this.toast.show('업그레이드 기능은 준비 중입니다.', THEME.warning);
+        this.heroActionPanel.hide();
+    }
+
+    private sellHero(hero: Hero) {
+        // 판매 가격 계산: (기본 소환 비용 * 기본 반환율) + (기본 소환 비용 * 등급별 보너스 * (등급-1))
+        const baseSellPrice = HERO_SUMMON_COST * HERO_SELL_BASE_RETURN_RATE;
+        const rankBonus = HERO_SUMMON_COST * HERO_SELL_RANK_BONUS_RATE * (hero.rank - 1);
+        const sellPrice = Math.floor(baseSellPrice + rankBonus);
+
+        this.gold += sellPrice;
+        this.toast.show(`${hero.rank}등급 영웅 판매 (+${sellPrice}G)`, THEME.success);
+        this.gridManager.removeHero(hero);
+        this.heroActionPanel.hide();
+    }
+
 
     private endGame(didWin: boolean, reason: string) {
         this.scene.start('EndScene', { didWin, reason });
@@ -319,5 +347,6 @@ export class GameScene extends Phaser.Scene {
         this.volumeBackground?.destroy();
         this.volumeSlider?.destroy();
         this.volumeValueText?.destroy();
+        this.heroActionPanel?.destroy();
     }
 }
