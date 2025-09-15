@@ -62,10 +62,11 @@ export class HeroActionPanel {
         buttonBg.fillStyle(parseInt(THEME.neutral.substring(1), 16), 1);
         buttonBg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 8);
 
-        const buttonText = this.scene.add.text(0, -8, text, {
+        const buttonText = this.scene.add.text(0, 0, text, {
             fontFamily: THEME.font,
             fontSize: '16px',
             color: THEME.text,
+            align: 'center', // 텍스트를 중앙 정렬
         }).setOrigin(0.5);
 
         buttonContainer.add([buttonBg, buttonText]);
