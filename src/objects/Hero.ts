@@ -1,6 +1,7 @@
 // src/objects/Hero.ts
 
 import Phaser from 'phaser';
+import { GridCell } from '../core/Grid';
 import type { HeroType, HeroRank } from '../core/types'; // HeroType, HeroRank 임포트
 import { HEROES_DATA } from '../core/constants';
 import { Enemy } from './Enemy';
@@ -17,6 +18,7 @@ export class Hero extends Phaser.GameObjects.Image {
     public targetStick = 0;
     private fireSoundKey: string;
     private fireEffectKey: string;
+    public cell: GridCell | null = null; // 자신이 속한 셀 정보
 
     private static heroRankBackgroundColors: { [key: number]: number } = {
         1: 0x808080, // Gray

@@ -109,6 +109,8 @@ export class GameScene extends Phaser.Scene {
             this.load.audio(hero.imageKey + '_sound', hero.fireSound);
             this.load.image(hero.imageKey + '_effect', hero.fireEffect);
         });
+        // 합성 이펙트용 이미지
+        this.load.image('star_particle', 'assets/images/star_particle.png');
     }
 
     create() {
@@ -160,7 +162,8 @@ export class GameScene extends Phaser.Scene {
         this.heroActionPanel = new HeroActionPanel(
             this,
             (hero) => this.upgradeHero(hero),
-            (hero) => this.sellHero(hero)
+            (hero) => this.sellHero(hero),
+            (hero) => this.combineHero(hero)
         );
 
 
@@ -174,6 +177,7 @@ export class GameScene extends Phaser.Scene {
             this.summonButton = new SummonButton(this, () => {
                 if (this.gold >= HERO_SUMMON_COST) {
                     if (this.gridManager.trySummonHero()) {
+                        const lastSummonedHero = this.heroes[this.heroes.length - 1];
                         this.onHeroSummoned();
                     }
                 } else {
@@ -298,6 +302,14 @@ export class GameScene extends Phaser.Scene {
         this.gold += sellPrice;
         this.toast.show(`${hero.rank}등급 영웅 판매 (+${sellPrice}G)`, THEME.success);
         this.gridManager.removeHero(hero);
+        this.heroActionPanel.hide();
+    }
+
+    private combineHero(hero: Hero) {
+        if (hero.cell) {
+            this.gridManager.checkForCombination(hero.cell);
+            this.gridManager.clearSelection(); // 합성 후 선택 상태 해제
+        }
         this.heroActionPanel.hide();
     }
 

@@ -70,30 +70,7 @@ export class GridManager {
         const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC', 'TypeD', 'TypeE'];
         const randomHeroType = heroTypes[(Math.random() * heroTypes.length) | 0];
 
-        let targetCell: GridCell | null = null;
-        const tempHeroForValidation = { type: randomHeroType } as Hero;
-
-        for (const cell of this.gridCells) {
-            if (cell.occupiedHeroes.length > 0 && cell.occupiedHeroes[0].type === randomHeroType && cell.occupiedHeroes.length < MAX_HEROES_PER_CELL) {
-                if (addHeroToCell(cell, tempHeroForValidation)) {
-                    targetCell = cell;
-                    removeHeroFromCell(cell, tempHeroForValidation);
-                    break;
-                }
-            }
-        }
-
-        if (!targetCell) {
-            for (const cell of this.gridCells) {
-                if (isCellEmpty(cell)) {
-                    if (addHeroToCell(cell, tempHeroForValidation)) {
-                        targetCell = cell;
-                        removeHeroFromCell(cell, tempHeroForValidation);
-                        break;
-                    }
-                }
-            }
-        }
+        const targetCell = this.findTargetCellFor(randomHeroType);
 
         if (!targetCell) {
             this.scene.toast.show('배치 가능한 자리가 없습니다', THEME.danger);
@@ -106,18 +83,9 @@ export class GridManager {
         this.scene.heroes.push(newHero);
 
         addHeroToCell(targetCell, newHero);
+        newHero.cell = targetCell; // Hero에 cell 정보 할당
         this.redrawAllCellBackgrounds();
-
-        targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
-            const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, targetCell.occupiedHeroes.length, targetCellCenterX, targetCellCenterY);
-            this.scene.tweens.add({
-                targets: heroInCell,
-                x: targetX,
-                y: targetY,
-                duration: 300,
-                ease: 'Power2',
-            });
-        });
+        this.repositionHeroesInCell(targetCell);
 
         const fx = this.scene.add.circle(targetCellCenterX, targetCellCenterY, 4, 0x99ddff).setAlpha(0.8);
         this.scene.tweens.add({ targets: fx, radius: 40, alpha: 0, duration: 250, onComplete: () => fx.destroy() });
@@ -180,11 +148,14 @@ export class GridManager {
     private moveOrSwapHeroes(oldCell: GridCell, targetCell: GridCell) {
         const { x: oldCellCenterX, y: oldCellCenterY } = cellToWorld(oldCell.col, oldCell.row, this.gridMetrics);
         const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
-
+        
         if (isCellEmpty(targetCell)) { // Simple move
             const heroesToMove = [...oldCell.occupiedHeroes];
             oldCell.occupiedHeroes.length = 0;
-            heroesToMove.forEach(hero => addHeroToCell(targetCell, hero));
+            heroesToMove.forEach(hero => {
+                addHeroToCell(targetCell, hero);
+                hero.cell = targetCell; // Hero의 cell 정보 업데이트
+            });
             targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
                 const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, targetCell.occupiedHeroes.length, targetCellCenterX, targetCellCenterY);
                 this.scene.tweens.add({ targets: heroInCell, x: targetX, y: targetY, duration: 300, ease: 'Power2' });
@@ -194,8 +165,14 @@ export class GridManager {
             const heroesInTargetCell = [...targetCell.occupiedHeroes];
             oldCell.occupiedHeroes.length = 0;
             targetCell.occupiedHeroes.length = 0;
-            heroesInTargetCell.forEach(hero => addHeroToCell(oldCell, hero));
-            heroesInOldCell.forEach(hero => addHeroToCell(targetCell, hero));
+            heroesInTargetCell.forEach(hero => {
+                addHeroToCell(oldCell, hero);
+                hero.cell = oldCell; // Hero의 cell 정보 업데이트
+            });
+            heroesInOldCell.forEach(hero => {
+                addHeroToCell(targetCell, hero);
+                hero.cell = targetCell; // Hero의 cell 정보 업데이트
+            });
             oldCell.occupiedHeroes.forEach((heroInCell, idx) => {
                 const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, oldCell.occupiedHeroes.length, oldCellCenterX, oldCellCenterY);
                 this.scene.tweens.add({ targets: heroInCell, x: targetX, y: targetY, duration: 300, ease: 'Power2' });
@@ -212,6 +189,7 @@ export class GridManager {
         const cell = this.gridCells.find(c => c.occupiedHeroes.includes(heroToRemove));
         if (cell) {
             removeHeroFromCell(cell, heroToRemove);
+            heroToRemove.cell = null; // Hero의 cell 정보 제거
             this.redrawAllCellBackgrounds();
 
             // 남은 영웅들 위치 재조정
@@ -223,6 +201,108 @@ export class GridManager {
         }
         heroToRemove.destroy();
         this.scene.heroes = this.scene.heroes.filter(h => h !== heroToRemove);
+    }
+    public checkForCombination(cell: GridCell) {
+        if (cell.occupiedHeroes.length < 3) return;
+
+        const firstHero = cell.occupiedHeroes[0];
+        const rankToCombine = firstHero.rank;
+
+        if (rankToCombine >= 5) return; // 최고 등급은 합성 불가
+
+        const allSameRank = cell.occupiedHeroes.every(h => h.rank === rankToCombine);
+
+        if (cell.occupiedHeroes.length === 3 && allSameRank) {
+            const heroesToCombine = [...cell.occupiedHeroes];
+
+            // 기존 영웅들 제거
+            heroesToCombine.forEach(h => {
+                this.scene.heroes = this.scene.heroes.filter(sceneHero => sceneHero !== h);
+                h.destroy();
+            });
+            cell.occupiedHeroes.length = 0;
+
+            // 다음 등급 영웅 생성
+            const nextRank = rankToCombine + 1;
+            const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC', 'TypeD', 'TypeE'];
+            // 등급(1~5)을 인덱스(0~4)로 변환
+            const nextHeroType = heroTypes[nextRank - 1];
+
+            // 1. 합성된 영웅이 들어갈 최적의 셀 찾기 (기존에 같은 타입이 있는 곳 우선)
+            const targetCell = this.findTargetCellFor(nextHeroType);
+
+            const finalCell = targetCell || cell; // 배치할 셀을 찾지 못하면 원래 합성 위치에 배치
+            const { x: finalCellCenterX, y: finalCellCenterY } = cellToWorld(finalCell.col, finalCell.row, this.gridMetrics);
+            const newHero = new Hero(this.scene, finalCellCenterX, finalCellCenterY, 30, 0.5, 200, nextHeroType);
+            newHero.setDepth(5);
+            this.scene.heroes.push(newHero);
+            addHeroToCell(finalCell, newHero);
+            newHero.cell = finalCell; // 새로 생성된 Hero에 cell 정보 할당
+            this.repositionHeroesInCell(finalCell);
+
+            // 합성 이펙트
+            const fx = this.scene.add.image(finalCellCenterX, finalCellCenterY, 'star_particle');
+            fx.setDepth(10).setScale(0);
+
+            this.scene.tweens.add({
+                targets: fx,
+                scale: 1.5,
+                angle: 360,
+                alpha: 0,
+                duration: 500,
+                ease: 'Power2',
+                onComplete: () => fx.destroy()
+            });
+
+            this.scene.toast.show(`${rankToCombine}등급 ➡️ ${nextRank}등급 합성!`, THEME.success);
+
+            this.redrawAllCellBackgrounds();
+
+        }
+    }
+
+    private findTargetCellFor(heroType: HeroType): GridCell | null {
+        let targetCell: GridCell | null = null;
+        const tempHeroForValidation = { type: heroType } as Hero;
+
+        // 1. 같은 타입의 영웅이 이미 있는 셀 (3개 미만) 우선 탐색
+        for (const cell of this.gridCells) {
+            if (cell.occupiedHeroes.length > 0 && cell.occupiedHeroes[0].type === heroType && cell.occupiedHeroes.length < MAX_HEROES_PER_CELL) {
+                if (addHeroToCell(cell, tempHeroForValidation)) {
+                    targetCell = cell;
+                    removeHeroFromCell(cell, tempHeroForValidation);
+                    break;
+                }
+            }
+        }
+
+        // 2. 적절한 셀을 못 찾았으면, 비어있는 셀 탐색
+        if (!targetCell) {
+            for (const cell of this.gridCells) {
+                if (isCellEmpty(cell)) {
+                    if (addHeroToCell(cell, tempHeroForValidation)) {
+                        targetCell = cell;
+                        removeHeroFromCell(cell, tempHeroForValidation);
+                        break;
+                    }
+                }
+            }
+        }
+        return targetCell;
+    }
+
+    private repositionHeroesInCell(cell: GridCell) {
+        const { x: cellCenterX, y: cellCenterY } = cellToWorld(cell.col, cell.row, this.gridMetrics);
+        cell.occupiedHeroes.forEach((heroInCell, idx) => {
+            const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, cell.occupiedHeroes.length, cellCenterX, cellCenterY);
+            this.scene.tweens.add({
+                targets: heroInCell,
+                x: targetX,
+                y: targetY,
+                duration: 300,
+                ease: 'Power2',
+            });
+        });
     }
 
     private drawGridDebug() {
