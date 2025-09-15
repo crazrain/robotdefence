@@ -142,7 +142,7 @@ export class Hero extends Phaser.GameObjects.Image {
         // @ts-ignore
         if (!this.scene || !this.scene.sys || !this.scene.sys.isActive) return;
 
-        this.scene.sound.play(this.fireSoundKey);
+        this.scene.sound.play(this.fireSoundKey, { volume: 0.5 });
 
         const angle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y);
         const offset = 20; // 영웅 크기의 절반 정도
