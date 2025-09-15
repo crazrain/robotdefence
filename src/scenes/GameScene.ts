@@ -53,6 +53,15 @@ export class GameScene extends Phaser.Scene {
     private volumeValueText?: Phaser.GameObjects.Text;
     private volumeBorder?: Phaser.GameObjects.Graphics;
 
+    // 볼륨 슬라이더 상수
+    private readonly volumeUiX = GAME_WIDTH - 180;
+    private readonly volumeLabelY = 90;
+    private readonly volumeSliderY = 120;
+    private readonly volumeSliderWidth = 90;
+    private readonly volumeSliderHeight = 8;
+    private volumeSliderMinX = 0;
+    private volumeSliderMaxX = 0;
+
     // 경제/모드
     gold = 200;
     mode: Mode = 'solo';
@@ -162,29 +171,31 @@ export class GameScene extends Phaser.Scene {
         });
 
         // 볼륨 슬라이더 UI 추가
-        this.volumeLabel = this.add.text(GAME_WIDTH - 180, 90, 'Volume:   ', { color: '#fff', fontSize: '18px', fontFamily: 'monospace' }).setOrigin(0.5).setDepth(10);
-        this.volumeValueText = this.add.text(GAME_WIDTH - 180 + 40, 90, `${Math.round(this.sound.volume * 100)}%`, { color: '#fff', fontSize: '18px', fontFamily: 'monospace' }).setOrigin(0.5).setDepth(10); // 볼륨 수치 텍스트를 레이블 옆으로 이동 및 퍼센트 표시
-        this.volumeBackground = this.add.rectangle(GAME_WIDTH - 180, 120, 90, 8, 0x333333).setDepth(10); // 배경 크기 조정
+        this.volumeLabel = this.add.text(this.volumeUiX, this.volumeLabelY, 'Volume:   ', { color: '#fff', fontSize: '18px', fontFamily: 'monospace' }).setOrigin(0.5).setDepth(10);
+        this.volumeValueText = this.add.text(this.volumeUiX + 40, this.volumeLabelY, `${Math.round(this.sound.volume * 100)}%`, { color: '#fff', fontSize: '18px', fontFamily: 'monospace' }).setOrigin(0.5).setDepth(10);
+        this.volumeBackground = this.add.rectangle(this.volumeUiX, this.volumeSliderY, this.volumeSliderWidth, this.volumeSliderHeight, 0x333333).setDepth(10);
         this.volumeBorder = this.add.graphics().setDepth(10); // 외곽선 추가
         this.volumeBorder.lineStyle(2, 0x888888, 1); // 외곽선 스타일
-        this.volumeBorder.strokeRect(GAME_WIDTH - 180 - 45 - 45, 120 - 4, 90 + 45 + 45, 8); // 외곽선 그리기 (배경과 동일한 크기)
+        this.volumeBorder.strokeRect(this.volumeUiX - this.volumeSliderWidth, this.volumeSliderY - this.volumeSliderHeight / 2, this.volumeSliderWidth * 2, this.volumeSliderHeight);
 
-        this.volumeSlider = this.add.rectangle(GAME_WIDTH - 180, 120, 90, 8, 0xffffff).setDepth(11);
+        this.volumeSlider = this.add.rectangle(this.volumeUiX, this.volumeSliderY, this.volumeSliderWidth, this.volumeSliderHeight, 0xffffff).setDepth(11);
         this.volumeSlider.setInteractive();
+
+        // 드래그 범위 계산
+        this.volumeSliderMinX = this.volumeUiX - this.volumeSliderWidth / 2;
+        this.volumeSliderMaxX = this.volumeUiX + this.volumeSliderWidth / 2;
 
         // 초기 볼륨 설정
         this.sound.volume = 0.5; // 기본 볼륨 0.5
-        this.volumeSlider.x = GAME_WIDTH - 180 - 45 + (this.sound.volume * 90); // 슬라이더 위치 초기화
+        this.volumeSlider.x = this.volumeSliderMinX + (this.sound.volume * this.volumeSliderWidth); // 슬라이더 위치 초기화
         this.volumeValueText.setText(`${Math.round(this.sound.volume * 100)}%`); // 초기 볼륨 수치 업데이트
 
         this.input.setDraggable(this.volumeSlider);
 
         this.volumeSlider.on('drag', (pointer: Phaser.Input.Pointer, dragX: number) => {
-            const minX = GAME_WIDTH - 180 - 45;
-            const maxX = GAME_WIDTH - 180 + 45;
-            const newX = Phaser.Math.Clamp(dragX, minX, maxX);
+            const newX = Phaser.Math.Clamp(dragX, this.volumeSliderMinX, this.volumeSliderMaxX);
             this.volumeSlider!.x = newX;
-            this.sound.volume = (newX - minX) / 90;
+            this.sound.volume = (newX - this.volumeSliderMinX) / this.volumeSliderWidth;
             this.volumeValueText!.setText(`${Math.round(this.sound.volume * 100)}%`); // 볼륨 수치 업데이트
         });
 
