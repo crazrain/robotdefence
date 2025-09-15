@@ -3,12 +3,13 @@ export const GAME_HEIGHT = 1280;
 
 export const MAX_ALIVE = 100;
 export const BASE_HP = 100;
-export const SUMMON_COST = 100;
 
 // 보상
 export const GOLD_PER_HP = 0.05;
-export const WAVE_CLEAR_BASE = 80;
-export const WAVE_CLEAR_GROWTH = 0.3;
+export const WAVE_CLEAR_BASE = 10;
+export const WAVE_CLEAR_GROWTH = 0.1;
+
+export const HERO_SUMMON_COST = 100;
 
 // 하단 루프 사각형
 export const LOOP_RECT_BOTTOM = {

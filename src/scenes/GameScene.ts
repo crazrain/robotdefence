@@ -9,6 +9,7 @@ import {
     WAVE_CLEAR_BASE,
     WAVE_CLEAR_GROWTH,
     HEROES_DATA,
+    HERO_SUMMON_COST,
 } from '../core/constants';
 import { buildBottomLoop, buildTopLoop } from '../core/Path';
 import type { Mode } from '../core/types';
@@ -158,8 +159,15 @@ export class GameScene extends Phaser.Scene {
         this.modeSelector = new ModeSelector(this, (m) => {
             this.mode = m;
             this.waves.start(this.mode, 0);
-            // 모드 선택 완료 후 소환 버튼 생성 및 활성화
-            this.summonButton = new SummonButton(this, () => this.gridManager.trySummonHero());
+            this.summonButton = new SummonButton(this, () => {
+                if (this.gold >= HERO_SUMMON_COST) {
+                    if (this.gridManager.trySummonHero()) {
+                        this.onHeroSummoned();
+                    }
+                } else {
+                    this.toast.show(`골드가 부족합니다! (필요: ${HERO_SUMMON_COST})`, '#ff5252');
+                }
+            });
             this.summonButton.create();
         });
         this.modeSelector.show();
@@ -247,6 +255,13 @@ export class GameScene extends Phaser.Scene {
         this.gold += bonus;
         this.toast.show(`웨이브 클리어 보상 +${bonus}`, '#77ff77');
     }
+
+    // GridManager가 호출할 콜백
+    public onHeroSummoned() {
+        this.gold -= HERO_SUMMON_COST;
+        this.toast.show(`영웅 소환! (-${HERO_SUMMON_COST}G)`, '#4caf50');
+    }
+
 
     private endGame(didWin: boolean, reason: string) {
         this.scene.start('EndScene', { didWin, reason });

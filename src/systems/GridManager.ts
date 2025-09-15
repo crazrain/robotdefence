@@ -14,7 +14,7 @@ import {
     MAX_HEROES_PER_CELL
 } from '../core/Grid';
 import { Hero } from '../objects/Hero';
-import { HERO_MOVE_RANGE, MAX_HEROES, SUMMON_COST } from '../core/constants';
+import { HERO_MOVE_RANGE, MAX_HEROES, HERO_SUMMON_COST } from '../core/constants';
 import type { HeroType } from '../core/types';
 
 export class GridManager {
@@ -64,11 +64,7 @@ export class GridManager {
     public trySummonHero() {
         if (this.scene.heroes.length >= MAX_HEROES) {
             this.scene.toast(`영웅은 ${MAX_HEROES}명까지 소환할 수 있습니다`, '#ff7777');
-            return;
-        }
-        if (this.scene.gold < SUMMON_COST) {
-            this.scene.toast('골드가 부족합니다', '#ff7777');
-            return;
+            return false;
         }
 
         const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC', 'TypeD', 'TypeE'];
@@ -101,10 +97,8 @@ export class GridManager {
 
         if (!targetCell) {
             this.scene.toast('배치 가능한 자리가 없습니다', '#ff7777');
-            return;
+            return false;
         }
-
-        this.scene.gold -= SUMMON_COST;
 
         const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
         const newHero = new Hero(this.scene, targetCellCenterX, targetCellCenterY, 30, 0.5, 200, randomHeroType);
@@ -127,6 +121,9 @@ export class GridManager {
 
         const fx = this.scene.add.circle(targetCellCenterX, targetCellCenterY, 4, 0x99ddff).setAlpha(0.8);
         this.scene.tweens.add({ targets: fx, radius: 40, alpha: 0, duration: 250, onComplete: () => fx.destroy() });
+
+        // GameScene에 영웅 소환 성공을 알림
+        return true;
     }
 
     private handlePointerDown(pointer: Phaser.Input.Pointer) {
