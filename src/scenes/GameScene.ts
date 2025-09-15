@@ -28,6 +28,8 @@ import { GridManager } from '../systems/GridManager';
 import { SpeedControlButton } from '../ui/SpeedControlButton';
 import { Toast } from '../ui/Toast';
 
+const VOLUME_STORAGE_KEY = 'robot-defence-volume';
+
 export class GameScene extends Phaser.Scene {
     // 경로(상·하 루프)
     waypointsTop = buildTopLoop();
@@ -57,7 +59,7 @@ export class GameScene extends Phaser.Scene {
     private volumeBorder?: Phaser.GameObjects.Graphics;
 
     // 볼륨 슬라이더 상수
-    private readonly volumeUiX = GAME_WIDTH - 180;
+    private readonly volumeUiX = GAME_WIDTH - 100; // 오른쪽 여백 100px
     private readonly volumeLabelY = 90;
     private readonly volumeSliderY = 120;
     private readonly volumeSliderWidth = 90;
@@ -178,12 +180,12 @@ export class GameScene extends Phaser.Scene {
         });
 
         // 볼륨 슬라이더 UI 추가
-        this.volumeLabel = this.add.text(this.volumeUiX, this.volumeLabelY, 'Volume:   ', { color: '#fff', fontSize: '18px', fontFamily: 'monospace' }).setOrigin(0.5).setDepth(10);
-        this.volumeValueText = this.add.text(this.volumeUiX + 40, this.volumeLabelY, `${Math.round(this.sound.volume * 100)}%`, { color: '#fff', fontSize: '18px', fontFamily: 'monospace' }).setOrigin(0.5).setDepth(10);
+        this.volumeLabel = this.add.text(this.volumeUiX, this.volumeLabelY, 'Volume:', { color: '#fff', fontSize: '18px', fontFamily: 'monospace' }).setOrigin(1, 0.5).setDepth(10); // Origin(1, 0.5)로 오른쪽 정렬
+        this.volumeValueText = this.add.text(this.volumeUiX + 5, this.volumeLabelY, `${Math.round(this.sound.volume * 100)}%`, { color: '#fff', fontSize: '18px', fontFamily: 'monospace' }).setOrigin(0, 0.5).setDepth(10); // Origin(0, 0.5)로 왼쪽 정렬
         this.volumeBackground = this.add.rectangle(this.volumeUiX, this.volumeSliderY, this.volumeSliderWidth, this.volumeSliderHeight, 0x333333).setDepth(10);
         this.volumeBorder = this.add.graphics().setDepth(10); // 외곽선 추가
         this.volumeBorder.lineStyle(2, 0x888888, 1); // 외곽선 스타일
-        this.volumeBorder.strokeRect(this.volumeUiX - this.volumeSliderWidth, this.volumeSliderY - this.volumeSliderHeight / 2, this.volumeSliderWidth * 2, this.volumeSliderHeight);
+        this.volumeBorder.strokeRect(this.volumeUiX - this.volumeSliderWidth / 2, this.volumeSliderY - this.volumeSliderHeight / 2, this.volumeSliderWidth, this.volumeSliderHeight);
 
         this.volumeSlider = this.add.rectangle(this.volumeUiX, this.volumeSliderY, this.volumeSliderWidth, this.volumeSliderHeight, 0xffffff).setDepth(11);
         this.volumeSlider.setInteractive();
@@ -192,8 +194,11 @@ export class GameScene extends Phaser.Scene {
         this.volumeSliderMinX = this.volumeUiX - this.volumeSliderWidth / 2;
         this.volumeSliderMaxX = this.volumeUiX + this.volumeSliderWidth / 2;
 
-        // 초기 볼륨 설정
-        this.sound.volume = 0.5; // 기본 볼륨 0.5
+        // localStorage에서 볼륨 로드, 없으면 기본값 0.5 사용
+        const savedVolume = localStorage.getItem(VOLUME_STORAGE_KEY);
+        this.sound.volume = savedVolume ? parseFloat(savedVolume) : 0.5;
+
+        // 슬라이더 및 텍스트 초기 위치/값 설정
         this.volumeSlider.x = this.volumeSliderMinX + (this.sound.volume * this.volumeSliderWidth); // 슬라이더 위치 초기화
         this.volumeValueText.setText(`${Math.round(this.sound.volume * 100)}%`); // 초기 볼륨 수치 업데이트
 
@@ -204,6 +209,11 @@ export class GameScene extends Phaser.Scene {
             this.volumeSlider!.x = newX;
             this.sound.volume = (newX - this.volumeSliderMinX) / this.volumeSliderWidth;
             this.volumeValueText!.setText(`${Math.round(this.sound.volume * 100)}%`); // 볼륨 수치 업데이트
+        });
+
+        // 드래그가 끝나면 localStorage에 저장
+        this.volumeSlider.on('dragend', () => {
+            localStorage.setItem(VOLUME_STORAGE_KEY, this.sound.volume.toString());
         });
 
         // 라이프사이클 훅(자동 정리)
