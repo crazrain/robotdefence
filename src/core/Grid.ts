@@ -75,11 +75,11 @@ export function addHeroToCell(cell: GridCell, hero: Hero): boolean {
     }
 
     // 2. 이미 영웅이 있는 경우
-    const existingHeroType = cell.occupiedHeroes[0].type;
+    const existingHero = cell.occupiedHeroes[0];
 
     // 2-1. 다른 종류의 영웅이 이미 있는 경우 (규칙 위반)
-    if (existingHeroType !== hero.type) {
-        console.warn(`Cannot add ${hero.type} to cell (${cell.col},${cell.row}). It already contains ${existingHeroType} heroes.`);
+    if (existingHero.imageKey !== hero.imageKey) {
+        console.warn(`Cannot add ${hero.imageKey} to cell (${cell.col},${cell.row}). It already contains ${existingHero.imageKey} heroes.`);
         return false;
     }
 

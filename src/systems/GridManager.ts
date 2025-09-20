@@ -1,4 +1,3 @@
-
 // src/systems/GridManager.ts
 import Phaser from 'phaser';
 import { GameScene } from '../scenes/GameScene';
@@ -11,6 +10,7 @@ import {
     addHeroToCell,
     removeHeroFromCell,
     isCellEmpty,
+    isCellFull,
     MAX_HEROES_PER_CELL
 } from '../core/Grid';
 import { Hero } from '../objects/Hero';
@@ -81,28 +81,41 @@ export class GridManager {
         // 해당 등급 내에서 무작위 영웅 하나를 선택합니다.
         const randomHeroData = Phaser.Math.RND.pick(heroesOfSameGrade);
 
-        const targetCell = this.findTargetCellFor(randomHeroGradeType);
+        // 1. 배치 우선순위 정의: 같은 종류가 있는 셀 > 비어있는 셀
+        const preferredCells = this.gridCells.filter(cell =>
+            !isCellEmpty(cell) &&
+            !isCellFull(cell) &&
+            cell.occupiedHeroes[0].imageKey === randomHeroData.imageKey
+        );
+        const fallbackCells = this.gridCells.filter(isCellEmpty);
+        const cellsToTry = [...preferredCells, ...fallbackCells];
 
-        if (!targetCell) {
-            this.scene.toast.show('배치 가능한 자리가 없습니다', THEME.danger);
-            return false;
+        // 2. 우선순위에 따라 배치 시도
+        for (const targetCell of cellsToTry) {
+            const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
+            const newHero = new Hero(this.scene, targetCellCenterX, targetCellCenterY, randomHeroData.imageKey);
+
+            // Grid.ts의 addHeroToCell 로직으로 배치 가능 여부 최종 확인
+            if (addHeroToCell(targetCell, newHero)) {
+                newHero.setDepth(5);
+                this.scene.heroes.push(newHero);
+                newHero.cell = targetCell;
+                this.redrawAllCellBackgrounds();
+                this.repositionHeroesInCell(targetCell);
+
+                const fx = this.scene.add.circle(targetCellCenterX, targetCellCenterY, 4, 0x99ddff).setAlpha(0.8);
+                this.scene.tweens.add({ targets: fx, radius: 40, alpha: 0, duration: 250, onComplete: () => fx.destroy() });
+
+                return true; // 배치 성공
+            } else {
+                // 로직상 이곳에 오면 안되지만, 안전을 위해 임시 생성된 영웅 파괴
+                newHero.destroy();
+            }
         }
 
-        const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
-        const newHero = new Hero(this.scene, targetCellCenterX, targetCellCenterY, randomHeroData.imageKey);
-        newHero.setDepth(5);
-        this.scene.heroes.push(newHero);
-
-        addHeroToCell(targetCell, newHero);
-        newHero.cell = targetCell; // Hero에 cell 정보 할당
-        this.redrawAllCellBackgrounds();
-        this.repositionHeroesInCell(targetCell);
-
-        const fx = this.scene.add.circle(targetCellCenterX, targetCellCenterY, 4, 0x99ddff).setAlpha(0.8);
-        this.scene.tweens.add({ targets: fx, radius: 40, alpha: 0, duration: 250, onComplete: () => fx.destroy() });
-
-        // GameScene에 영웅 소환 성공을 알림
-        return true;
+        // 3. 모든 셀에 배치 실패
+        this.scene.toast.show('배치 가능한 자리가 없습니다', THEME.danger);
+        return false;
     }
 
     private handlePointerDown(pointer: Phaser.Input.Pointer) {
@@ -218,12 +231,13 @@ export class GridManager {
 
         const firstHero = cell.occupiedHeroes[0];
         const rankToCombine = firstHero.rank;
+        const imageKeyToCombine = firstHero.imageKey;
 
         if (rankToCombine >= 5) return; // 최고 등급은 합성 불가
 
-        const allSameRank = cell.occupiedHeroes.every(h => h.rank === rankToCombine);
+        const allSameType = cell.occupiedHeroes.every(h => h.imageKey === imageKeyToCombine);
 
-        if (cell.occupiedHeroes.length === 3 && allSameRank) {
+        if (cell.occupiedHeroes.length === 3 && allSameType) {
             const heroesToCombine = [...cell.occupiedHeroes];
 
             // 기존 영웅들 제거
@@ -247,11 +261,18 @@ export class GridManager {
             // 상위 등급 내에서 무작위 영웅 하나를 선택합니다.
             const nextHeroData = Phaser.Math.RND.pick(heroesOfNextGrade);
 
+            // 합성된 영웅이 들어갈 최적의 셀 찾기 (기존에 같은 타입이 있는 곳 우선)
+            const preferredCells = this.gridCells.filter(c =>
+                !isCellEmpty(c) &&
+                !isCellFull(c) &&
+                c.occupiedHeroes[0].imageKey === nextHeroData.imageKey
+            );
+            const fallbackCells = this.gridCells.filter(isCellEmpty);
+            const cellsToTry = [...preferredCells, ...fallbackCells];
 
-            // 1. 합성된 영웅이 들어갈 최적의 셀 찾기 (기존에 같은 타입이 있는 곳 우선)
-            const targetCell = this.findTargetCellFor(nextHeroType);
+            // 배치할 셀을 찾지 못하면 원래 합성 위치에 배치
+            const finalCell = cellsToTry.length > 0 ? cellsToTry[0] : cell;
 
-            const finalCell = targetCell || cell; // 배치할 셀을 찾지 못하면 원래 합성 위치에 배치
             const { x: finalCellCenterX, y: finalCellCenterY } = cellToWorld(finalCell.col, finalCell.row, this.gridMetrics);
             const newHero = new Hero(this.scene, finalCellCenterX, finalCellCenterY, nextHeroData.imageKey);
             newHero.setDepth(5);
@@ -279,36 +300,6 @@ export class GridManager {
             this.redrawAllCellBackgrounds();
 
         }
-    }
-
-    private findTargetCellFor(heroType: HeroType): GridCell | null {
-        let targetCell: GridCell | null = null;
-        const tempHeroForValidation = { type: heroType } as Hero;
-
-        // 1. 같은 타입의 영웅이 이미 있는 셀 (3개 미만) 우선 탐색
-        for (const cell of this.gridCells) {
-            if (cell.occupiedHeroes.length > 0 && cell.occupiedHeroes[0].type === heroType && cell.occupiedHeroes.length < MAX_HEROES_PER_CELL) {
-                if (addHeroToCell(cell, tempHeroForValidation)) {
-                    targetCell = cell;
-                    removeHeroFromCell(cell, tempHeroForValidation);
-                    break;
-                }
-            }
-        }
-
-        // 2. 적절한 셀을 못 찾았으면, 비어있는 셀 탐색
-        if (!targetCell) {
-            for (const cell of this.gridCells) {
-                if (isCellEmpty(cell)) {
-                    if (addHeroToCell(cell, tempHeroForValidation)) {
-                        targetCell = cell;
-                        removeHeroFromCell(cell, tempHeroForValidation);
-                        break;
-                    }
-                }
-            }
-        }
-        return targetCell;
     }
 
     private getRandomHeroTypeByWeight(): HeroType {

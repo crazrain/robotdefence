@@ -50,6 +50,8 @@ export class Hero extends Phaser.GameObjects.Image {
         this.scene.add.existing(this);
         this.setInteractive();
 
+        this.imageKey = imageKey; // imageKey를 인스턴스 속성으로 저장
+
         this.type = heroData.type;
         this.level = 1;
 
