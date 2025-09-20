@@ -11,14 +11,15 @@ export class HUD {
     constructor(private scene: Phaser.Scene) {}
 
     create() {
-        this.bg = this.scene.add.rectangle(0, 0, this.scene.scale.width, 70, THEME.background, 0.35)
+        this.bg = this.scene.add.rectangle(0, 0, this.scene.scale.width, 70, THEME.background, 0.5)
             .setOrigin(0, 0)
             .setDepth(5);
 
         this.line1 = this.scene.add.text(16, 12, '', {
             color: THEME.text,
             fontFamily: THEME.font,
-            fontSize: '22px'
+            fontSize: '22px',
+            align: 'left'
         }).setDepth(6);
 
         this.line2 = this.scene.add.text(16, 40, '', {
