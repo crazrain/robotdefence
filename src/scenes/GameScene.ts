@@ -8,11 +8,9 @@ import {
     LOOP_RECT_TOP,
     WAVE_CLEAR_BASE,
     WAVE_CLEAR_GROWTH,
-    HEROES_DATA,
     THEME,
-    HERO_SUMMON_COST,
-    HERO_SELL_RETURN_RATE,
 } from '../core/constants';
+import { HEROES_DATA, HERO_SUMMON_COST, HERO_SELL_RETURN_RATE } from '../data/heroData';
 import { buildBottomLoop, buildTopLoop } from '../core/Path';
 import type { Mode } from '../core/types';
 import { Enemy } from '../objects/Enemy';

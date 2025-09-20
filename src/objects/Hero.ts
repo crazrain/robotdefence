@@ -3,7 +3,7 @@
 import Phaser from 'phaser';
 import { GridCell } from '../core/Grid';
 import { Grade, HeroType } from '../core/types'; // HeroType, HeroRank 임포트
-import { HEROES_DATA, HERO_SELL_RETURN_RATE } from '../core/constants';
+import { HEROES_DATA, HERO_SELL_RETURN_RATE } from '../data/heroData';
 import { Enemy } from './Enemy';
 import { Projectile } from './Projectile';
 import { calculateHeroDamage } from "../core/config";

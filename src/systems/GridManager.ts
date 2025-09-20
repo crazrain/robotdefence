@@ -14,7 +14,8 @@ import {
     MAX_HEROES_PER_CELL
 } from '../core/Grid';
 import { Hero } from '../objects/Hero';
-import { HERO_MOVE_RANGE, MAX_HEROES, HERO_SUMMON_COST, THEME, HEROES_DATA } from '../core/constants';
+import { HERO_MOVE_RANGE, MAX_HEROES, THEME } from '../core/constants';
+import { HEROES_DATA, HERO_SUMMON_COST } from '../data/heroData';
 import type { HeroType } from '../core/types';
 
 export class GridManager {

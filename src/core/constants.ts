@@ -23,10 +23,9 @@ export const GOLD_PER_HP = 0.05;
 export const WAVE_CLEAR_BASE = 50;
 export const WAVE_CLEAR_GROWTH = 0.2;
 
-export const HERO_SUMMON_COST = 100;
+import { HERO_SUMMON_COST, HERO_SELL_RETURN_RATE } from '../data/heroData';
 
-// 영웅 판매/업그레이드
-export const HERO_SELL_RETURN_RATE = 0.5; // 판매 시 가치 반환 비율
+// 영웅 구매 및 판매 비율은 heroData에서 가져옵니다
 
 // 하단 루프 사각형
 export const LOOP_RECT_BOTTOM = {
@@ -65,80 +64,3 @@ export const MELEE_DEFAULT = {
 
 export const HERO_MOVE_RANGE = 100; // 영웅 이동 가능 거리 (그리드 셀 기준)
 
-// Hero
-export interface HeroData {
-  id: number;
-  name: string;
-  imageKey: string; // 코드에서 사용할 이미지 별명
-  assetPath: string; // 실제 이미지 파일 경로
-  fireEffect: string; // 포 효과
-  fireSound: string; // 포 소리 경로
-  type: HeroType;
-  atkInterval: number;
-  attackSpeed: number; // 초당 공격 횟수 (화면 표시용)
-  range: number;
-}
-
-// 모든 영웅의 데이터를 담는 배열
-export const HEROES_DATA: HeroData[] = [
-  {
-    id: 0, name: 'Warrior', imageKey: 'Basic1', assetPath: 'assets/images/Basic1.png', fireEffect: 'assets/images/Basic_Effect.png', fireSound: 'assets/sounds/Basic_Sound.mp3',
-    type: 'TypeA', atkInterval: 1.0, attackSpeed: 1.0, range: 200,
-  },
-  {
-    id: 1, name: 'Knight', imageKey: 'Basic2', assetPath: 'assets/images/Basic2.png', fireEffect: 'assets/images/Basic_Effect.png', fireSound: 'assets/sounds/Basic_Sound.mp3',
-    type: 'TypeA', atkInterval: 0.5, attackSpeed: 2.0, range: 190,
-  },
-  {
-    id: 2, name: 'Paladin', imageKey: 'Basic3', assetPath: 'assets/images/Basic3.png', fireEffect: 'assets/images/Basic_Effect.png', fireSound: 'assets/sounds/Basic_Sound.mp3',
-    type: 'TypeA', atkInterval: 3.0, attackSpeed: 0.33, range: 210,
-  },
-  {
-    id: 3, name: 'Mage', imageKey: 'Rare1', assetPath: 'assets/images/Rare1.png', fireEffect: 'assets/images/Rare_Effect.png', fireSound: 'assets/sounds/Rare_Sound.mp3',
-    type: 'TypeB', atkInterval: 1.0, attackSpeed: 1.0, range: 220,
-  },
-  {
-    id: 4, name: 'Sorcerer', imageKey: 'Rare2', assetPath: 'assets/images/Rare2.png', fireEffect: 'assets/images/Rare_Effect.png', fireSound: 'assets/sounds/Rare_Sound.mp3',
-    type: 'TypeB', atkInterval: 0.5, attackSpeed: 2.0, range: 230,
-  },
-  {
-    id: 5, name: 'Warlock', imageKey: 'Rare3', assetPath: 'assets/images/Rare3.png', fireEffect: 'assets/images/Rare_Effect.png', fireSound: 'assets/sounds/Rare_Sound.mp3',
-    type: 'TypeB', atkInterval: 3.0, attackSpeed: 0.33, range: 210,
-  },
-  {
-    id: 6, name: 'Archer', imageKey: 'Epic1', assetPath: 'assets/images/Epic1.png', fireEffect: 'assets/images/Epic_Effect.png', fireSound: 'assets/sounds/Epic_Sound.mp3',
-    type: 'TypeC', atkInterval: 1.0, attackSpeed: 1.0, range: 240,
-  },
-  {
-    id: 7, name: 'Hunter', imageKey: 'Epic2', assetPath: 'assets/images/Epic2.png', fireEffect: 'assets/images/Epic_Effect.png', fireSound: 'assets/sounds/Epic_Sound.mp3',
-    type: 'TypeC', atkInterval: 0.5, attackSpeed: 2.0, range: 230,
-  },
-  {
-    id: 8, name: 'Ranger', imageKey: 'Epic3', assetPath: 'assets/images/Epic3.png', fireEffect: 'assets/images/Epic_Effect.png', fireSound: 'assets/sounds/Epic_Sound.mp3',
-    type: 'TypeC', atkInterval: 3.0, attackSpeed: 0.33, range: 250,
-  },
-  {
-    id: 9, name: 'Crusader', imageKey: 'Legendary1', assetPath: 'assets/images/Legendary1.png', fireEffect: 'assets/images/Legendary_Effect.png', fireSound: 'assets/sounds/Legendary_Sound.mp3',
-    type: 'TypeD', atkInterval: 1.0, attackSpeed: 1.0, range: 260,
-  },
-  {
-    id: 10, name: 'Guardian', imageKey: 'Legendary2', assetPath: 'assets/images/Legendary2.png', fireEffect: 'assets/images/Legendary_Effect.png', fireSound: 'assets/sounds/Legendary_Sound.mp3',
-    type: 'TypeD', atkInterval: 0.5, attackSpeed: 2.0, range: 250,
-  },
-  {
-    id: 11, name: 'Templar', imageKey: 'Legendary3', assetPath: 'assets/images/Legendary3.png', fireEffect: 'assets/images/Legendary_Effect.png', fireSound: 'assets/sounds/Legendary_Sound.mp3',
-    type: 'TypeD', atkInterval: 3.0, attackSpeed: 0.33, range: 270,
-  },
-  {
-    id: 12, name: 'Dragon', imageKey: 'Mythical1', assetPath: 'assets/images/Mythical1.png', fireEffect: 'assets/images/Mythical_Effect.png', fireSound: 'assets/sounds/Mythical_Sound.mp3',
-    type: 'TypeE', atkInterval: 1.0, attackSpeed: 1.0, range: 280,
-  },
-  {
-    id: 13, name: 'Phoenix', imageKey: 'Mythical2', assetPath: 'assets/images/Mythical2.png', fireEffect: 'assets/images/Mythical_Effect.png', fireSound: 'assets/sounds/Mythical_Sound.mp3',
-    type: 'TypeE', atkInterval: 0.5, attackSpeed: 2.0, range: 300,
-  },
-  {
-    id: 14, name: 'Titan', imageKey: 'Mythical3', assetPath: 'assets/images/Mythical3.png', fireEffect: 'assets/images/Mythical_Effect.png', fireSound: 'assets/sounds/Mythical_Sound.mp3',
-    type: 'TypeE', atkInterval: 3.0, attackSpeed: 0.33, range: 260,
-  },
-];
