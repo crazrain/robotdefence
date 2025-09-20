@@ -67,6 +67,7 @@ export class Hero extends Phaser.GameObjects.Image {
 
         this.atk = calculateHeroDamage(this.getGrade(), this.level);
         this.atkInterval = heroData.atkInterval;
+        this.attackSpeed = heroData.attackSpeed;
         this.range = heroData.range;
 
         this.setDisplaySize(heroSize, heroSize);
