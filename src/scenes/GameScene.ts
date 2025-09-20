@@ -65,7 +65,7 @@ export class GameScene extends Phaser.Scene {
     private readonly volumeLabelY = 90;
     private readonly volumeSliderY = 120;
     private readonly volumeSliderWidth = 90;
-    private readonly volumeSliderHeight = 8;
+    private readonly volumeSliderHeight = 20;
     private volumeSliderMinX = 0;
     private volumeSliderMaxX = 0;
 
