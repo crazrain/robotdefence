@@ -1,6 +1,7 @@
 import type Phaser from 'phaser';
 import type { WaveController } from '../systems/WaveController';
 import type { Mode } from '../core/types';
+import { THEME } from '../core/constants';
 
 export class HUD {
     bg?: Phaser.GameObjects.Rectangle;
@@ -10,16 +11,20 @@ export class HUD {
     constructor(private scene: Phaser.Scene) {}
 
     create() {
-        this.bg = this.scene.add.rectangle(0, 0, this.scene.scale.width, 70, 0x000000, 0.35)
+        this.bg = this.scene.add.rectangle(0, 0, this.scene.scale.width, 70, THEME.background, 0.35)
             .setOrigin(0, 0)
             .setDepth(5);
 
         this.line1 = this.scene.add.text(16, 12, '', {
-            color: '#ffffff', fontFamily: 'monospace', fontSize: '22px'
+            color: THEME.text,
+            fontFamily: THEME.font,
+            fontSize: '22px'
         }).setDepth(6);
 
         this.line2 = this.scene.add.text(16, 40, '', {
-            color: '#cfe9ff', fontFamily: 'monospace', fontSize: '20px'
+            color: THEME.warning,
+            fontFamily: THEME.font,
+            fontSize: '20px'
         }).setDepth(6);
     }
 
