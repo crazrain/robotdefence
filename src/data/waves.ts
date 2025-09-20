@@ -3,13 +3,13 @@ import type { WaveDef } from '../core/types';
 
 export const Waves: WaveDef[] = [
     // 1: 기본 웨이브
-    { durationSeconds: 20, topCount: 0, bottomCount: 15, hpScale: 1.0, speed: 80, spawnJitter: 0.2 },
+    { durationSeconds: 30, topCount: 0, bottomCount: 15, hpScale: 1.0, speed: 80, spawnJitter: 0.2 },
     // 2: 약간 더 많고 빨라진 웨이브
-    { durationSeconds: 20, topCount: 0, bottomCount: 20, hpScale: 1.1, speed: 85, spawnJitter: 0.2 },
+    { durationSeconds: 30, topCount: 0, bottomCount: 20, hpScale: 1.1, speed: 85, spawnJitter: 0.2 },
     // 3: 체력이 증가하고, 2마리씩 짝지어 등장
-    { durationSeconds: 25, topCount: 0, bottomCount: 25, hpScale: 1.2, speed: 90, batchSize: 2, spawnJitter: 0.1 },
+    { durationSeconds: 40, topCount: 0, bottomCount: 25, hpScale: 1.2, speed: 90, batchSize: 2, spawnJitter: 0.1 },
     // 4: 점점 빠르게 등장하는 웨이브
-    { durationSeconds: 25, topCount: 0, bottomCount: 30, hpScale: 1.3, speed: 95, pacingCurve: 'easeIn' },
+    { durationSeconds: 40, topCount: 0, bottomCount: 30, hpScale: 1.3, speed: 95, pacingCurve: 'easeIn' },
     // 5: 보스 등장 전, 짧고 굵은 웨이브
     { durationSeconds: 15, topCount: 0, bottomCount: 20, hpScale: 1.5, speed: 100, spawnIntervalBottom: 0.5, spawnJitter: 0.1 },
 

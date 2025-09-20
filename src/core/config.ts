@@ -3,19 +3,39 @@ import { Grade } from "./types";
 
 export const HERO_ATTACK_POWER_CONFIG = {
   BASE_DAMAGE_BY_GRADE: {
-    Basic: 18,
-    Rare: 45,
-    Epic: 80,
-    Legendary: 150,
-    Mythical: 400,
+    Basic: 36,
+    Rare: 90,
+    Epic: 160,
+    Legendary: 300,
+    Mythical: 800,
   } as Record<Grade, number>,
   LEVEL_MULTIPLIER: 1.5,
 };
 
-export function calculateHeroDamage(grade: Grade, level: number): number {
+export function calculateHeroDamage(grade: Grade, level: number, imageKey: string): number {
   const baseDamage = HERO_ATTACK_POWER_CONFIG.BASE_DAMAGE_BY_GRADE[grade];
-  const damage = baseDamage * Math.pow(HERO_ATTACK_POWER_CONFIG.LEVEL_MULTIPLIER, level - 1);
-  return Math.round(damage);
+
+  // 영웅 종류(1, 2, 3)에 따른 데미지 비율 적용
+  let damageMultiplier = 1.0;
+  const heroType = parseInt(imageKey.slice(-1), 10); // 'Basic1' -> 1
+
+  switch (heroType) {
+    case 2: // 0.5초 간격, 데미지 비율 3
+      damageMultiplier = 3 / 8; // 기준(8) 대비
+      break;
+    case 3: // 3.0초 간격, 데미지 비율 10
+      damageMultiplier = 10 / 8; // 기준(8) 대비
+      break;
+    case 1: // 1.0초 간격, 데미지 비율 8 (기준)
+    default:
+      damageMultiplier = 1.0;
+      break;
+  }
+
+  const typeAdjustedDamage = baseDamage * damageMultiplier;
+  const finalDamage = typeAdjustedDamage * Math.pow(HERO_ATTACK_POWER_CONFIG.LEVEL_MULTIPLIER, level - 1);
+
+  return Math.round(finalDamage);
 }
 
 

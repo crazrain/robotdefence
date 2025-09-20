@@ -65,7 +65,7 @@ export class Hero extends Phaser.GameObjects.Image {
         };
         this.rank = heroTypeToRankMap[this.type]; // 영웅 등급 설정
 
-        this.atk = calculateHeroDamage(this.getGrade(), this.level);
+        this.atk = calculateHeroDamage(this.getGrade(), this.level, this.imageKey);
         this.atkInterval = heroData.atkInterval;
         this.attackSpeed = heroData.attackSpeed;
         this.range = heroData.range;
@@ -88,7 +88,7 @@ export class Hero extends Phaser.GameObjects.Image {
 
     upgrade() {
         this.level++;
-        this.atk = calculateHeroDamage(this.getGrade(), this.level);
+        this.atk = calculateHeroDamage(this.getGrade(), this.level, this.imageKey);
         // TODO: Add visual indicator for level up
     }
 
