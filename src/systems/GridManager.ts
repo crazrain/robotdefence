@@ -262,16 +262,14 @@ export class GridManager {
             const nextHeroData = Phaser.Math.RND.pick(heroesOfNextGrade);
 
             // 합성된 영웅이 들어갈 최적의 셀 찾기 (기존에 같은 타입이 있는 곳 우선)
-            const preferredCells = this.gridCells.filter(c =>
+            const preferredCell = this.gridCells.find(c =>
                 !isCellEmpty(c) &&
                 !isCellFull(c) &&
                 c.occupiedHeroes[0].imageKey === nextHeroData.imageKey
             );
-            const fallbackCells = this.gridCells.filter(isCellEmpty);
-            const cellsToTry = [...preferredCells, ...fallbackCells];
 
-            // 배치할 셀을 찾지 못하면 원래 합성 위치에 배치
-            const finalCell = cellsToTry.length > 0 ? cellsToTry[0] : cell;
+            // 선호하는 셀이 있으면 그곳에, 없으면 원래 합성이 일어난 셀에 배치
+            const finalCell = preferredCell || cell;
 
             const { x: finalCellCenterX, y: finalCellCenterY } = cellToWorld(finalCell.col, finalCell.row, this.gridMetrics);
             const newHero = new Hero(this.scene, finalCellCenterX, finalCellCenterY, nextHeroData.imageKey);
