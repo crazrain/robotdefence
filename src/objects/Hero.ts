@@ -38,20 +38,19 @@ export class Hero extends Phaser.GameObjects.Image {
         5: 8100,  // 5등급 영웅의 가치
     };
 
-    constructor(scene: Phaser.Scene, x: number, y: number, type: HeroType) {
-        const heroData = HEROES_DATA.find(h => h.type === type);
+    constructor(scene: Phaser.Scene, x: number, y: number, imageKey: string) {
+        const heroData = HEROES_DATA.find(h => h.imageKey === imageKey);
         if (!heroData) {
-            throw new Error(`Hero data not found for type: ${type}`);
+            throw new Error(`Hero data not found for imageKey: ${imageKey}`);
         }
 
-        const imageKey = heroData.imageKey;
         const heroSize = 40;
         
         super(scene, x, y, imageKey);
         this.scene.add.existing(this);
         this.setInteractive();
 
-        this.type = type;
+        this.type = heroData.type;
         this.level = 1;
 
         // HeroType을 HeroRank로 매핑

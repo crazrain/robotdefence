@@ -14,7 +14,7 @@ import {
     MAX_HEROES_PER_CELL
 } from '../core/Grid';
 import { Hero } from '../objects/Hero';
-import { HERO_MOVE_RANGE, MAX_HEROES, HERO_SUMMON_COST, THEME } from '../core/constants';
+import { HERO_MOVE_RANGE, MAX_HEROES, HERO_SUMMON_COST, THEME, HEROES_DATA } from '../core/constants';
 import type { HeroType } from '../core/types';
 
 export class GridManager {
@@ -69,9 +69,19 @@ export class GridManager {
             return false;
         }
 
-        // 가중치에 따라 영웅 타입을 결정합니다.
-        const randomHeroType = this.getRandomHeroTypeByWeight();
-        const targetCell = this.findTargetCellFor(randomHeroType);
+        // 가중치에 따라 영웅 등급(타입)을 결정합니다.
+        const randomHeroGradeType = this.getRandomHeroTypeByWeight();
+
+        // 해당 등급의 모든 영웅을 찾습니다.
+        const heroesOfSameGrade = HEROES_DATA.filter(h => h.type === randomHeroGradeType);
+        if (heroesOfSameGrade.length === 0) {
+            console.error(`No heroes found for type: ${randomHeroGradeType}`);
+            return false;
+        }
+        // 해당 등급 내에서 무작위 영웅 하나를 선택합니다.
+        const randomHeroData = Phaser.Math.RND.pick(heroesOfSameGrade);
+
+        const targetCell = this.findTargetCellFor(randomHeroGradeType);
 
         if (!targetCell) {
             this.scene.toast.show('배치 가능한 자리가 없습니다', THEME.danger);
@@ -79,7 +89,7 @@ export class GridManager {
         }
 
         const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
-        const newHero = new Hero(this.scene, targetCellCenterX, targetCellCenterY, randomHeroType);
+        const newHero = new Hero(this.scene, targetCellCenterX, targetCellCenterY, randomHeroData.imageKey);
         newHero.setDepth(5);
         this.scene.heroes.push(newHero);
 
@@ -226,15 +236,24 @@ export class GridManager {
             // 다음 등급 영웅 생성
             const nextRank = rankToCombine + 1;
             const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC', 'TypeD', 'TypeE'];
-            // 등급(1~5)을 인덱스(0~4)로 변환
             const nextHeroType = heroTypes[nextRank - 1];
+
+            // 상위 등급의 모든 영웅을 찾습니다.
+            const heroesOfNextGrade = HEROES_DATA.filter(h => h.type === nextHeroType);
+            if (heroesOfNextGrade.length === 0) {
+                console.error(`No heroes found for next type: ${nextHeroType}`);
+                return; // or handle error appropriately
+            }
+            // 상위 등급 내에서 무작위 영웅 하나를 선택합니다.
+            const nextHeroData = Phaser.Math.RND.pick(heroesOfNextGrade);
+
 
             // 1. 합성된 영웅이 들어갈 최적의 셀 찾기 (기존에 같은 타입이 있는 곳 우선)
             const targetCell = this.findTargetCellFor(nextHeroType);
 
             const finalCell = targetCell || cell; // 배치할 셀을 찾지 못하면 원래 합성 위치에 배치
             const { x: finalCellCenterX, y: finalCellCenterY } = cellToWorld(finalCell.col, finalCell.row, this.gridMetrics);
-            const newHero = new Hero(this.scene, finalCellCenterX, finalCellCenterY, nextHeroType);
+            const newHero = new Hero(this.scene, finalCellCenterX, finalCellCenterY, nextHeroData.imageKey);
             newHero.setDepth(5);
             this.scene.heroes.push(newHero);
             addHeroToCell(finalCell, newHero);
