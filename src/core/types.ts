@@ -3,6 +3,8 @@ import type { Hero } from '../objects/Hero'; // Hero 클래스 임포트
 export type Vec2 = { x: number; y: number };
 export type Mode = 'solo' | 'duo';
 
+export type Grade = 'Basic' | 'Rare' | 'Epic' | 'Legendary' | 'Mythical';
+
 export type HeroType = 'TypeA' | 'TypeB' | 'TypeC' | 'TypeD' | 'TypeE'; // 새로운 영웅 종류 정의
 
 export type HeroRank = 'Rank1' | 'Rank2' | 'Rank3' | 'Rank4' | 'Rank5'; // 영웅 등급 정의

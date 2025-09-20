@@ -20,8 +20,8 @@ export const BASE_HP = 100;
 
 // 보상
 export const GOLD_PER_HP = 0.05;
-export const WAVE_CLEAR_BASE = 10;
-export const WAVE_CLEAR_GROWTH = 0.1;
+export const WAVE_CLEAR_BASE = 50;
+export const WAVE_CLEAR_GROWTH = 0.2;
 
 export const HERO_SUMMON_COST = 100;
 
@@ -74,6 +74,8 @@ export interface HeroData {
   fireEffect: string; // 포 효과
   fireSound: string; // 포 소리 경로
   type: HeroType;
+  atkInterval: number;
+  range: number;
 }
 
 // 모든 영웅의 데이터를 담는 배열
@@ -86,6 +88,8 @@ export const HEROES_DATA: HeroData[] = [
     fireEffect: 'assets/images/Basic_Effect.png',
     fireSound: 'assets/sounds/Basic_Sound.mp3',
     type: 'TypeA',
+    atkInterval: 0.5,
+    range: 200,
   },
   {
     id: 1,
@@ -95,6 +99,8 @@ export const HEROES_DATA: HeroData[] = [
     fireEffect: 'assets/images/Rare_Effect.png',
     fireSound: 'assets/sounds/Rare_Sound.mp3',
     type: 'TypeB',
+    atkInterval: 0.45,
+    range: 220,
   },
   {
     id: 2,
@@ -104,6 +110,8 @@ export const HEROES_DATA: HeroData[] = [
     fireEffect: 'assets/images/Epic_Effect.png',
     fireSound: 'assets/sounds/Epic_Sound.mp3',
     type: 'TypeC',
+    atkInterval: 0.4,
+    range: 240,
   },
   {
     id: 3,
@@ -113,6 +121,8 @@ export const HEROES_DATA: HeroData[] = [
     fireEffect: 'assets/images/Legendary_Effect.png',
     fireSound: 'assets/sounds/Legendary_Sound.mp3',
     type: 'TypeD',
+    atkInterval: 0.35,
+    range: 260,
   },
   {
     id: 4,
@@ -122,5 +132,7 @@ export const HEROES_DATA: HeroData[] = [
     fireEffect: 'assets/images/Mythical_Effect.png',
     fireSound: 'assets/sounds/Mythical_Sound.mp3',
     type: 'TypeE',
+    atkInterval: 0.3,
+    range: 280,
   },
 ];

@@ -2,14 +2,16 @@
 
 import Phaser from 'phaser';
 import { GridCell } from '../core/Grid';
-import type { HeroType } from '../core/types'; // HeroType, HeroRank 임포트
+import { Grade, HeroType } from '../core/types'; // HeroType, HeroRank 임포트
 import { HEROES_DATA, HERO_SELL_RETURN_RATE } from '../core/constants';
 import { Enemy } from './Enemy';
 import { Projectile } from './Projectile';
+import { calculateHeroDamage } from "../core/config";
 
 export class Hero extends Phaser.GameObjects.Image {
     public type: HeroType; // 영웅 종류 속성 추가
     public rank: number; // 영웅 등급 속성 (숫자 타입으로 변경)
+    public level: number; // 영웅 레벨
     public atk: number;
     public atkInterval: number;
     public range: number;
@@ -36,21 +38,21 @@ export class Hero extends Phaser.GameObjects.Image {
         5: 8100,  // 5등급 영웅의 가치
     };
 
-    constructor(scene: Phaser.Scene, x: number, y: number, atk: number, atkInterval: number, range: number, type: HeroType) {
+    constructor(scene: Phaser.Scene, x: number, y: number, type: HeroType) {
         const heroData = HEROES_DATA.find(h => h.type === type);
-        const imageKey = heroData ? heroData.imageKey : 'Basic1';
+        if (!heroData) {
+            throw new Error(`Hero data not found for type: ${type}`);
+        }
+
+        const imageKey = heroData.imageKey;
         const heroSize = 40;
         
         super(scene, x, y, imageKey);
         this.scene.add.existing(this);
         this.setInteractive();
-        this.type = type; // 생성자에서 영웅 종류 설정
-        this.atk = atk;
-        this.atkInterval = atkInterval;
-        this.range = range;
-        this.setDisplaySize(heroSize, heroSize);
-        this.fireSoundKey = heroData ? heroData.imageKey + '_sound' : 'Basic1_sound';
-        this.fireEffectKey = heroData ? heroData.imageKey + '_effect' : 'Basic1_effect';
+
+        this.type = type;
+        this.level = 1;
 
         // HeroType을 HeroRank로 매핑
         const heroTypeToRankMap: Record<HeroType, number> = {
@@ -61,6 +63,31 @@ export class Hero extends Phaser.GameObjects.Image {
             'TypeE': 5,
         };
         this.rank = heroTypeToRankMap[this.type]; // 영웅 등급 설정
+
+        this.atk = calculateHeroDamage(this.getGrade(), this.level);
+        this.atkInterval = heroData.atkInterval;
+        this.range = heroData.range;
+
+        this.setDisplaySize(heroSize, heroSize);
+        this.fireSoundKey = heroData.imageKey + '_sound';
+        this.fireEffectKey = heroData.imageKey + '_effect';
+    }
+
+    getGrade(): Grade {
+        switch (this.rank) {
+            case 1: return 'Basic';
+            case 2: return 'Rare';
+            case 3: return 'Epic';
+            case 4: return 'Legendary';
+            case 5: return 'Mythical';
+            default: return 'Basic';
+        }
+    }
+
+    upgrade() {
+        this.level++;
+        this.atk = calculateHeroDamage(this.getGrade(), this.level);
+        // TODO: Add visual indicator for level up
     }
 
     public getRankBackgroundColor(): number {

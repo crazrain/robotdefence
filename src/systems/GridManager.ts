@@ -79,7 +79,7 @@ export class GridManager {
         }
 
         const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
-        const newHero = new Hero(this.scene, targetCellCenterX, targetCellCenterY, 30, 0.5, 200, randomHeroType);
+        const newHero = new Hero(this.scene, targetCellCenterX, targetCellCenterY, randomHeroType);
         newHero.setDepth(5);
         this.scene.heroes.push(newHero);
 
@@ -234,7 +234,7 @@ export class GridManager {
 
             const finalCell = targetCell || cell; // 배치할 셀을 찾지 못하면 원래 합성 위치에 배치
             const { x: finalCellCenterX, y: finalCellCenterY } = cellToWorld(finalCell.col, finalCell.row, this.gridMetrics);
-            const newHero = new Hero(this.scene, finalCellCenterX, finalCellCenterY, 30, 0.5, 200, nextHeroType);
+            const newHero = new Hero(this.scene, finalCellCenterX, finalCellCenterY, nextHeroType);
             newHero.setDepth(5);
             this.scene.heroes.push(newHero);
             addHeroToCell(finalCell, newHero);
