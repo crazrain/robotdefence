@@ -23,6 +23,8 @@ export class Projectile extends Phaser.GameObjects.Image {
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
+        this.setScale(0.3);
+
         this.dmg = dmg;
         this.speed = speed;
         this.target = target;
@@ -41,6 +43,8 @@ export class Projectile extends Phaser.GameObjects.Image {
             }
             this.vx = (dx / dist) * this.speed;
             this.vy = (dy / dist) * this.speed;
+
+            this.rotation = Math.atan2(this.vy, this.vx) + Math.PI / 2;
         }
         this.x += this.vx * dt;
         this.y += this.vy * dt;
