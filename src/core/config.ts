@@ -48,8 +48,8 @@ export function calculateHeroDamage(grade: Grade, level: number, imageKey: strin
   const heroType = parseInt(imageKey.slice(-1), 10); // 'Basic1' -> 1
 
   switch (heroType) {
-    case 2: // 0.5초 간격, 데미지 비율 3
-      damageMultiplier = 3 / 8; // 기준(8) 대비
+    case 2: // 0.1초 간격, 데미지 비율 20% 하향
+      damageMultiplier = 0.2; // 기준(1.0) 대비 20% 하향
       break;
     case 3: // 3.0초 간격, 데미지 비율 10
       damageMultiplier = 10 / 8; // 기준(8) 대비
