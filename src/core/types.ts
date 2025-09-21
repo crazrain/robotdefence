@@ -4,6 +4,7 @@ export type Vec2 = { x: number; y: number };
 export type Mode = 'solo' | 'duo';
 
 export type Grade = 'Basic' | 'Rare' | 'Epic' | 'Legendary' | 'Mythical';
+export type RarityGroup = 'NormalRare' | 'Epic' | 'LegendaryMythical';
 
 export type HeroType = 'TypeA' | 'TypeB' | 'TypeC' | 'TypeD' | 'TypeE'; // 새로운 영웅 종류 정의
 

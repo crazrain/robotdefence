@@ -12,7 +12,7 @@ import {
 } from '../core/constants';
 import { HEROES_DATA, HERO_SUMMON_COST, HERO_SELL_RETURN_RATE } from '../data/heroData';
 import { buildBottomLoop, buildTopLoop } from '../core/Path';
-import type { Mode } from '../core/types';
+import type { Mode, RarityGroup } from '../core/types';
 import { Enemy } from '../objects/Enemy';
 import { Unit } from '../objects/Unit';
 import { Projectile } from '../objects/Projectile';
@@ -21,13 +21,15 @@ import { ModeSelector } from '../ui/ModeSelector';
 import { SummonButton } from '../ui/SummonButton';
 import { Spawner } from '../systems/Spawner';
 import { WaveController } from '../systems/WaveController';
-import { getDefaultConfig, type GameConfig } from '../core/config';
+import { getDefaultConfig, type GameConfig, PERMANENT_UPGRADE_CONFIG, getRarityGroup } from '../core/config';
 import { RoundTimer } from '../systems/RoundTimer';
 import { Hero } from '../objects/Hero';
 import { GridManager } from '../systems/GridManager';
 import { SpeedControlButton } from '../ui/SpeedControlButton';
 import { Toast } from '../ui/Toast';
 import { HeroActionPanel } from '../ui/HeroActionPanel';
+import { UpgradeButton } from '../ui/UpgradeButton';
+import { UpgradePanel } from '../ui/UpgradePanel';
 
 const VOLUME_STORAGE_KEY = 'robot-defence-volume';
 
@@ -51,6 +53,8 @@ export class GameScene extends Phaser.Scene {
     gridManager!: GridManager;
     speedControlButton!: SpeedControlButton;
     heroActionPanel!: HeroActionPanel;
+    upgradeButton!: UpgradeButton;
+    upgradePanel!: UpgradePanel;
 
     private toast!: Toast;
     // 볼륨 UI 요소
@@ -73,6 +77,11 @@ export class GameScene extends Phaser.Scene {
     gold = 200;
     mode: Mode = 'solo';
     private gameSpeed = 1;
+    public permanentUpgradeLevels: Record<RarityGroup, number> = {
+        NormalRare: 0,
+        Epic: 0,
+        LegendaryMythical: 0,
+    };
 
     // 라운드(게임) 타임아웃
     private cfg: GameConfig = getDefaultConfig('Normal');
@@ -115,6 +124,11 @@ export class GameScene extends Phaser.Scene {
         this._cleaned = false;
         this.gold = 200;
         this.gameSpeed = 1;
+        this.permanentUpgradeLevels = {
+            NormalRare: 0,
+            Epic: 0,
+            LegendaryMythical: 0,
+        };
         this.resetRuntimeArrays();
 
         this.cameras.main.setBackgroundColor(THEME.background);
@@ -181,8 +195,21 @@ export class GameScene extends Phaser.Scene {
                 }
             });
             this.summonButton.create();
+
+            this.upgradeButton = new UpgradeButton(this, () => {
+                if (this.upgradePanel.isVisible()) {
+                    this.upgradePanel.hide();
+                } else {
+                    this.upgradePanel.show(this.getUpgradeInfos());
+                }
+            });
+            this.upgradeButton.create();
         });
         this.modeSelector.show();
+
+        this.upgradePanel = new UpgradePanel(this, (rarityGroup) => {
+            this.handlePermanentUpgrade(rarityGroup);
+        });
 
         this.speedControlButton = new SpeedControlButton(this, GAME_WIDTH - 20, this.volumeSliderY);
         this.events.on('speedChanged', (speed: number) => {
@@ -302,6 +329,41 @@ export class GameScene extends Phaser.Scene {
         this.heroActionPanel.hide();
     }
 
+    private getUpgradeInfos() {
+        const infos: any = {};
+        for (const key in this.permanentUpgradeLevels) {
+            const rarityGroup = key as RarityGroup;
+            const level = this.permanentUpgradeLevels[rarityGroup];
+            const config = PERMANENT_UPGRADE_CONFIG[rarityGroup];
+            const cost = config.baseCost + config.costIncrease * level;
+            infos[rarityGroup] = { level, cost };
+        }
+        return infos;
+    }
+
+    private handlePermanentUpgrade(rarityGroup: RarityGroup) {
+        const level = this.permanentUpgradeLevels[rarityGroup];
+        const config = PERMANENT_UPGRADE_CONFIG[rarityGroup];
+        const cost = config.baseCost + config.costIncrease * level;
+
+        if (this.gold >= cost) {
+            this.gold -= cost;
+            this.permanentUpgradeLevels[rarityGroup]++;
+            this.toast.show(`${rarityGroup} 등급 업그레이드! (레벨 ${this.permanentUpgradeLevels[rarityGroup]})`, THEME.success);
+
+            // Update existing heroes
+            this.heroes.forEach(hero => {
+                if (getRarityGroup(hero.getGrade()) === rarityGroup) {
+                    hero.updateAttackWithPermanentUpgrade(this.permanentUpgradeLevels[rarityGroup]);
+                }
+            });
+
+            this.upgradePanel.updateInfo(this.getUpgradeInfos());
+        } else {
+            this.toast.show(`골드가 부족합니다! (필요: ${cost})`, THEME.danger);
+        }
+    }
+
 
     private endGame(didWin: boolean, reason: string) {
         this.scene.start('EndScene', { didWin, reason });
@@ -342,7 +404,9 @@ export class GameScene extends Phaser.Scene {
         this.gridManager.cleanup(hard);
 
         // 오버레이/UI
-        this.summonButton?.container.destroy(); // SummonButton 컨테이너 파괴 추가
+        this.summonButton?.container.destroy();
+        this.upgradeButton?.container.destroy();
+        this.upgradePanel?.hide();
         this.speedControlButton?.destroy();
         this.volumeLabel?.destroy();
         this.volumeBackground?.destroy();

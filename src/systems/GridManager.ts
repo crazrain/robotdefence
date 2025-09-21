@@ -16,7 +16,8 @@ import {
 import { Hero } from '../objects/Hero';
 import { HERO_MOVE_RANGE, MAX_HEROES, THEME } from '../core/constants';
 import { HEROES_DATA, HERO_SUMMON_COST } from '../data/heroData';
-import type { HeroType } from '../core/types';
+import type { Grade, HeroType } from '../core/types';
+import { getRarityGroup } from '../core/config';
 
 export class GridManager {
     private scene: GameScene;
@@ -64,25 +65,32 @@ export class GridManager {
         this.selectedHero = null;
     }
 
+    private getGradeFromHeroType(heroType: string): Grade {
+        switch (heroType) {
+            case 'TypeA': return 'Basic';
+            case 'TypeB': return 'Rare';
+            case 'TypeC': return 'Epic';
+            case 'TypeD': return 'Legendary';
+            case 'TypeE': return 'Mythical';
+            default: return 'Basic';
+        }
+    }
+
     public trySummonHero() {
         if (this.scene.heroes.length >= MAX_HEROES) {
             this.scene.toast.show(`영웅은 ${MAX_HEROES}명까지 소환할 수 있습니다`, THEME.danger);
             return false;
         }
 
-        // 가중치에 따라 영웅 등급(타입)을 결정합니다.
         const randomHeroGradeType = this.getRandomHeroTypeByWeight();
 
-        // 해당 등급의 모든 영웅을 찾습니다.
         const heroesOfSameGrade = HEROES_DATA.filter(h => h.type === randomHeroGradeType);
         if (heroesOfSameGrade.length === 0) {
             console.error(`No heroes found for type: ${randomHeroGradeType}`);
             return false;
         }
-        // 해당 등급 내에서 무작위 영웅 하나를 선택합니다.
         const randomHeroData = Phaser.Math.RND.pick(heroesOfSameGrade);
 
-        // 1. 배치 우선순위 정의: 같은 종류가 있는 셀 > 비어있는 셀
         const preferredCells = this.gridCells.filter(cell =>
             !isCellEmpty(cell) &&
             !isCellFull(cell) &&
@@ -91,12 +99,14 @@ export class GridManager {
         const fallbackCells = this.gridCells.filter(isCellEmpty);
         const cellsToTry = [...preferredCells, ...fallbackCells];
 
-        // 2. 우선순위에 따라 배치 시도
         for (const targetCell of cellsToTry) {
             const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
-            const newHero = new Hero(this.scene, targetCellCenterX, targetCellCenterY, randomHeroData.imageKey);
+            
+            const grade = this.getGradeFromHeroType(randomHeroData.type);
+            const rarityGroup = getRarityGroup(grade);
+            const permanentUpgradeLevel = this.scene.permanentUpgradeLevels[rarityGroup];
+            const newHero = new Hero(this.scene, targetCellCenterX, targetCellCenterY, randomHeroData.imageKey, permanentUpgradeLevel);
 
-            // Grid.ts의 addHeroToCell 로직으로 배치 가능 여부 최종 확인
             if (addHeroToCell(targetCell, newHero)) {
                 newHero.setDepth(5);
                 this.scene.heroes.push(newHero);
@@ -107,14 +117,12 @@ export class GridManager {
                 const fx = this.scene.add.circle(targetCellCenterX, targetCellCenterY, 4, 0x99ddff).setAlpha(0.8);
                 this.scene.tweens.add({ targets: fx, radius: 40, alpha: 0, duration: 250, onComplete: () => fx.destroy() });
 
-                return true; // 배치 성공
+                return true;
             } else {
-                // 로직상 이곳에 오면 안되지만, 안전을 위해 임시 생성된 영웅 파괴
                 newHero.destroy();
             }
         }
 
-        // 3. 모든 셀에 배치 실패
         this.scene.toast.show('배치 가능한 자리가 없습니다', THEME.danger);
         return false;
     }
@@ -123,7 +131,6 @@ export class GridManager {
         const clickedGameObjects = this.scene.input.manager.hitTest(pointer, this.scene.children.list, this.scene.cameras.main);
         const clickedHero = clickedGameObjects.find(obj => obj instanceof Hero) as Hero | undefined;
 
-        // 액션 패널이 보이는 상태에서 다른 곳을 클릭하면 패널을 숨김
         if (this.scene.heroActionPanel.isVisible() && !clickedHero) {
             this.scene.heroActionPanel.hide();
         }
@@ -164,7 +171,7 @@ export class GridManager {
             this.selectedHero = clickedHero;
             this.drawRangeDisplay(clickedHero);
             this.drawMovableCells();
-            this.scene.heroActionPanel.show(clickedHero); // 액션 패널 표시
+            this.scene.heroActionPanel.show(clickedHero);
         } else {
             this.clearSelection();
         }
@@ -179,7 +186,7 @@ export class GridManager {
             oldCell.occupiedHeroes.length = 0;
             heroesToMove.forEach(hero => {
                 addHeroToCell(targetCell, hero);
-                hero.cell = targetCell; // Hero의 cell 정보 업데이트
+                hero.cell = targetCell;
             });
             targetCell.occupiedHeroes.forEach((heroInCell, idx) => {
                 const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, targetCell.occupiedHeroes.length, targetCellCenterX, targetCellCenterY);
@@ -192,11 +199,11 @@ export class GridManager {
             targetCell.occupiedHeroes.length = 0;
             heroesInTargetCell.forEach(hero => {
                 addHeroToCell(oldCell, hero);
-                hero.cell = oldCell; // Hero의 cell 정보 업데이트
+                hero.cell = oldCell;
             });
             heroesInOldCell.forEach(hero => {
                 addHeroToCell(targetCell, hero);
-                hero.cell = targetCell; // Hero의 cell 정보 업데이트
+                hero.cell = targetCell;
             });
             oldCell.occupiedHeroes.forEach((heroInCell, idx) => {
                 const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, oldCell.occupiedHeroes.length, oldCellCenterX, oldCellCenterY);
@@ -214,10 +221,9 @@ export class GridManager {
         const cell = this.gridCells.find(c => c.occupiedHeroes.includes(heroToRemove));
         if (cell) {
             removeHeroFromCell(cell, heroToRemove);
-            heroToRemove.cell = null; // Hero의 cell 정보 제거
+            heroToRemove.cell = null;
             this.redrawAllCellBackgrounds();
 
-            // 남은 영웅들 위치 재조정
             const { x: cellCenterX, y: cellCenterY } = cellToWorld(cell.col, cell.row, this.gridMetrics);
             cell.occupiedHeroes.forEach((heroInCell, idx) => {
                 const { x: targetX, y: targetY } = Hero.calculateTargetPositionInCell(idx, cell.occupiedHeroes.length, cellCenterX, cellCenterY);
@@ -234,53 +240,51 @@ export class GridManager {
         const rankToCombine = firstHero.rank;
         const imageKeyToCombine = firstHero.imageKey;
 
-        if (rankToCombine >= 5) return; // 최고 등급은 합성 불가
+        if (rankToCombine >= 5) return;
 
         const allSameType = cell.occupiedHeroes.every(h => h.imageKey === imageKeyToCombine);
 
         if (cell.occupiedHeroes.length === 3 && allSameType) {
             const heroesToCombine = [...cell.occupiedHeroes];
 
-            // 기존 영웅들 제거
             heroesToCombine.forEach(h => {
                 this.scene.heroes = this.scene.heroes.filter(sceneHero => sceneHero !== h);
                 h.destroy();
             });
             cell.occupiedHeroes.length = 0;
 
-            // 다음 등급 영웅 생성
             const nextRank = rankToCombine + 1;
             const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC', 'TypeD', 'TypeE'];
             const nextHeroType = heroTypes[nextRank - 1];
 
-            // 상위 등급의 모든 영웅을 찾습니다.
             const heroesOfNextGrade = HEROES_DATA.filter(h => h.type === nextHeroType);
             if (heroesOfNextGrade.length === 0) {
                 console.error(`No heroes found for next type: ${nextHeroType}`);
-                return; // or handle error appropriately
+                return;
             }
-            // 상위 등급 내에서 무작위 영웅 하나를 선택합니다.
             const nextHeroData = Phaser.Math.RND.pick(heroesOfNextGrade);
 
-            // 합성된 영웅이 들어갈 최적의 셀 찾기 (기존에 같은 타입이 있는 곳 우선)
             const preferredCell = this.gridCells.find(c =>
                 !isCellEmpty(c) &&
                 !isCellFull(c) &&
                 c.occupiedHeroes[0].imageKey === nextHeroData.imageKey
             );
 
-            // 선호하는 셀이 있으면 그곳에, 없으면 원래 합성이 일어난 셀에 배치
             const finalCell = preferredCell || cell;
 
             const { x: finalCellCenterX, y: finalCellCenterY } = cellToWorld(finalCell.col, finalCell.row, this.gridMetrics);
-            const newHero = new Hero(this.scene, finalCellCenterX, finalCellCenterY, nextHeroData.imageKey);
+            
+            const nextGrade = this.getGradeFromHeroType(nextHeroData.type);
+            const nextRarityGroup = getRarityGroup(nextGrade);
+            const nextPermanentUpgradeLevel = this.scene.permanentUpgradeLevels[nextRarityGroup];
+            const newHero = new Hero(this.scene, finalCellCenterX, finalCellCenterY, nextHeroData.imageKey, nextPermanentUpgradeLevel);
+
             newHero.setDepth(5);
             this.scene.heroes.push(newHero);
             addHeroToCell(finalCell, newHero);
-            newHero.cell = finalCell; // 새로 생성된 Hero에 cell 정보 할당
+            newHero.cell = finalCell;
             this.repositionHeroesInCell(finalCell);
 
-            // 합성 이펙트
             const fx = this.scene.add.image(finalCellCenterX, finalCellCenterY, 'star_particle');
             fx.setDepth(10).setScale(0);
 
@@ -302,7 +306,6 @@ export class GridManager {
     }
 
     private getRandomHeroTypeByWeight(): HeroType {
-        // 소환 레벨이 변경되었을 때만 확률을 다시 계산합니다.
         if (this.scene.summonLevel !== this._cachedSummonLevel) {
             this.recalculateProbabilities();
         }
@@ -318,7 +321,7 @@ export class GridManager {
             randomValue -= this._cachedProbabilities[i];
         }
 
-        return heroTypes[0]; // Fallback
+        return heroTypes[0];
     }
 
     private recalculateProbabilities() {
@@ -326,16 +329,12 @@ export class GridManager {
 
         const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC', 'TypeD', 'TypeE'];
 
-        // 각 등급별 기본 소환 확률 (%)
         const baseProbabilities = [78.7, 20, 1, 0.25, 0.05];
 
-        // 소환 레벨에 따른 확률 보정
-        // 레벨이 오를수록 낮은 등급의 확률을 높은 등급으로 이전시킵니다.
         const probabilities = [...baseProbabilities];
-        const shiftAmount = (this._cachedSummonLevel > 1) ? (this._cachedSummonLevel - 1) * 0.5 : 0; // 레벨 1일때는 확률 이동 없음
+        const shiftAmount = (this._cachedSummonLevel > 1) ? (this._cachedSummonLevel - 1) * 0.5 : 0;
 
         if (shiftAmount > 0) {
-            // 1. 1, 2등급에서 확률을 가져옵니다. (7:3 비율로)
             const amountFromRank1 = Math.min(probabilities[0], shiftAmount * 0.7);
             const amountFromRank2 = Math.min(probabilities[1], shiftAmount * 0.3);
             const totalShiftAmount = amountFromRank1 + amountFromRank2;
@@ -343,7 +342,6 @@ export class GridManager {
             probabilities[0] -= amountFromRank1;
             probabilities[1] -= amountFromRank2;
 
-            // 2. 가져온 확률을 3, 4, 5등급에 분배합니다. (20:5:1 비율로)
             const ratioSum = 20 + 5 + 1;
             probabilities[2] += totalShiftAmount * (20 / ratioSum);
             probabilities[3] += totalShiftAmount * (5 / ratioSum);
@@ -352,7 +350,6 @@ export class GridManager {
 
         this._cachedProbabilities = probabilities;
 
-        // 현재 소환 레벨과 계산된 확률을 콘솔에 출력
         console.log(`Probabilities recalculated for Summon Level: ${this._cachedSummonLevel}`);
         console.table({
             'Rank 1 (%)': probabilities[0].toFixed(2),

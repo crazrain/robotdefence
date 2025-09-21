@@ -9,9 +9,9 @@ import { Projectile } from './Projectile';
 import { calculateHeroDamage } from "../core/config";
 
 export class Hero extends Phaser.GameObjects.Image {
-    public type: HeroType; // 영웅 종류 속성 추가
-    public rank: number; // 영웅 등급 속성 (숫자 타입으로 변경)
-    public level: number; // 영웅 레벨
+    public type: HeroType;
+    public rank: number;
+    public level: number;
     public atk: number;
     public atkInterval: number;
     public range: number;
@@ -20,7 +20,8 @@ export class Hero extends Phaser.GameObjects.Image {
     public targetStick = 0;
     private fireSoundKey: string;
     private fireEffectKey: string;
-    public cell: GridCell | null = null; // 자신이 속한 셀 정보
+    public cell: GridCell | null = null;
+    private permanentUpgradeLevel: number;
 
     private static heroRankBackgroundColors: { [key: number]: number } = {
         1: 0x95a5a6, // Gray (연한 회색)
@@ -38,7 +39,7 @@ export class Hero extends Phaser.GameObjects.Image {
         5: 8100,  // 5등급 영웅의 가치
     };
 
-    constructor(scene: Phaser.Scene, x: number, y: number, imageKey: string) {
+    constructor(scene: Phaser.Scene, x: number, y: number, imageKey: string, permanentUpgradeLevel: number) {
         const heroData = HEROES_DATA.find(h => h.imageKey === imageKey);
         if (!heroData) {
             throw new Error(`Hero data not found for imageKey: ${imageKey}`);
@@ -50,12 +51,12 @@ export class Hero extends Phaser.GameObjects.Image {
         this.scene.add.existing(this);
         this.setInteractive();
 
-        this.imageKey = imageKey; // imageKey를 인스턴스 속성으로 저장
+        this.imageKey = imageKey;
 
         this.type = heroData.type;
         this.level = 1;
+        this.permanentUpgradeLevel = permanentUpgradeLevel;
 
-        // HeroType을 HeroRank로 매핑
         const heroTypeToRankMap: Record<HeroType, number> = {
             'TypeA': 1,
             'TypeB': 2,
@@ -63,9 +64,9 @@ export class Hero extends Phaser.GameObjects.Image {
             'TypeD': 4,
             'TypeE': 5,
         };
-        this.rank = heroTypeToRankMap[this.type]; // 영웅 등급 설정
+        this.rank = heroTypeToRankMap[this.type];
 
-        this.atk = calculateHeroDamage(this.getGrade(), this.level, this.imageKey);
+        this.atk = calculateHeroDamage(this.getGrade(), this.level, this.imageKey, this.permanentUpgradeLevel);
         this.atkInterval = heroData.atkInterval;
         this.attackSpeed = heroData.attackSpeed;
         this.range = heroData.range;
@@ -88,12 +89,16 @@ export class Hero extends Phaser.GameObjects.Image {
 
     upgrade() {
         this.level++;
-        this.atk = calculateHeroDamage(this.getGrade(), this.level, this.imageKey);
-        // TODO: Add visual indicator for level up
+        this.atk = calculateHeroDamage(this.getGrade(), this.level, this.imageKey, this.permanentUpgradeLevel);
+    }
+
+    public updateAttackWithPermanentUpgrade(permanentUpgradeLevel: number) {
+        this.permanentUpgradeLevel = permanentUpgradeLevel;
+        this.atk = calculateHeroDamage(this.getGrade(), this.level, this.imageKey, this.permanentUpgradeLevel);
     }
 
     public getRankBackgroundColor(): number {
-        return Hero.heroRankBackgroundColors[this.rank] || 0x808080; // 숫자 키로 조회
+        return Hero.heroRankBackgroundColors[this.rank] || 0x808080;
     }
 
     public getSellPrice(): number {
@@ -101,29 +106,24 @@ export class Hero extends Phaser.GameObjects.Image {
         return Math.floor(value * HERO_SELL_RETURN_RATE);
     }
 
-    // 셀 내에서 영웅의 상대적인 위치를 조정하는 메서드
     public updatePositionInCell(index: number, total: number, cellCenterX: number, cellCenterY: number) {
         const { offsetX, offsetY } = Hero.calculateOffsetInCell(index, total);
         this.x = cellCenterX + offsetX;
         this.y = cellCenterY + offsetY;
     }
 
-    // 셀 내에서 영웅의 상대적인 위치 오프셋을 계산하는 정적 메서드
     public static calculateOffsetInCell(index: number, total: number): { offsetX: number, offsetY: number } {
         let offsetX = 0;
         let offsetY = 0;
-        const spacing = 35; // 영웅 간의 간격 증가
+        const spacing = 35;
 
         if (total === 1) {
-            // 1개일 때는 중앙에 배치
             offsetX = 0;
             offsetY = 0;
         } else if (total === 2) {
-            // 2개일 때는 좌우로 배치, 더 넓게
             offsetX = index === 0 ? -spacing / 2 : spacing / 2;
             offsetY = 0;
         } else if (total === 3) {
-            // 3개일 때는 삼각형 형태로 배치, 간격 넓게
             if (index === 0) {
                 offsetX = 0;
                 offsetY = -spacing / 2;
@@ -138,16 +138,12 @@ export class Hero extends Phaser.GameObjects.Image {
         return { offsetX, offsetY };
     }
 
-    // 셀 내에서 영웅의 최종 목표 위치를 계산하는 정적 메서드
     public static calculateTargetPositionInCell(index: number, total: number, cellCenterX: number, cellCenterY: number): { x: number, y: number } {
         const { offsetX, offsetY } = Hero.calculateOffsetInCell(index, total);
         return { x: cellCenterX + offsetX, y: cellCenterY + offsetY };
     }
 
     update(dt: number, enemies: Enemy[], projectiles: Projectile[]) {
-        // 씬이 이미 파괴/비활성 상태면 아무것도 하지 않음
-        // (재시작 직후 남아 있는 콜백이 도는 경우 방어)
-        // @ts-ignore
         if (!this.scene || !this.scene.sys || !this.scene.sys.isActive) return;
 
         this.timeSinceAttack += dt;
@@ -162,7 +158,7 @@ export class Hero extends Phaser.GameObjects.Image {
 
         if (this.lastTarget) {
             const angle = Phaser.Math.Angle.Between(this.x, this.y, this.lastTarget.x, this.lastTarget.y);
-            this.rotation = angle + Math.PI / 2; // 스프라이트가 위쪽을 향하고 있다고 가정
+            this.rotation = angle + Math.PI / 2;
         }
 
         if (this.lastTarget && this.timeSinceAttack >= this.atkInterval) {
@@ -182,27 +178,24 @@ export class Hero extends Phaser.GameObjects.Image {
     }
 
     private shoot(projectiles: Projectile[], target: Enemy) {
-        // 씬 유효성 재확인
-        // @ts-ignore
         if (!this.scene || !this.scene.sys || !this.scene.sys.isActive) return;
 
         this.scene.sound.play(this.fireSoundKey, { volume: 0.5 });
 
         const angle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y);
-        const offset = 20; // 영웅 크기의 절반 정도
+        const offset = 20;
         const fireX = this.x + Math.cos(angle) * offset;
         const fireY = this.y + Math.sin(angle) * offset;
 
-        // 화염 효과 생성
         const fireEffect = this.scene.add.sprite(fireX, fireY, this.fireEffectKey);
         fireEffect.setRotation(this.rotation);
         fireEffect.setOrigin(0.5, 0.5);
-        fireEffect.setScale(0.1); // 효과 크기 조절
+        fireEffect.setScale(0.1);
         this.scene.tweens.add({
             targets: fireEffect,
             alpha: 0,
-            angle: '+=180', // 180도 회전
-            duration: 150, // 0.15초 동안
+            angle: '+=180',
+            duration: 150,
             ease: 'Power2',
             onComplete: () => {
                 fireEffect.destroy();
