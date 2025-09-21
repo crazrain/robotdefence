@@ -82,7 +82,9 @@ export class WaveController {
                 // 배치 스폰
                 const batch = Math.max(1, w.batchSize ?? 1);
                 for (let i = 0; i < batch && this.rt.bottomToSpawn > 0; i++) {
-                    this.spawner.spawnBottom(w, enemies);
+                    // 배치 내 오프셋 추가
+                    const offset = { x: (Math.random() - 0.5) * 20, y: (Math.random() - 0.5) * 20 };
+                    this.spawner.spawnBottom(w, enemies, offset);
                     this.rt.bottomToSpawn--;
                 }
             }

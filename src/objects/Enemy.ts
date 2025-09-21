@@ -30,7 +30,8 @@ export class Enemy extends Phaser.GameObjects.Arc {
     }
 
     takeDamage(dmg: number) {
-        if (!this.alive) return;
+        if (!this.alive || this.hp <= 0) return;
+
         this.hp -= dmg;
         this.updateHealthBar(); // 체력 변경 시 체력 바 업데이트
         if (this.hp <= 0) {
