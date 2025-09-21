@@ -208,6 +208,7 @@ export class Hero extends Phaser.GameObjects.Image {
         fireEffect.setRotation(this.rotation);
         fireEffect.setOrigin(0.5, 0.5);
         fireEffect.setScale(0.1);
+        fireEffect.setDepth(1);
         this.scene.tweens.add({
             targets: fireEffect,
             alpha: 0,

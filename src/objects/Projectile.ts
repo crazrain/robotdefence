@@ -23,7 +23,8 @@ export class Projectile extends Phaser.GameObjects.Image {
         scene.add.existing(this);
         scene.physics.add.existing(this);
 
-        this.setScale(0.3);
+        this.setScale(0.5);
+        this.setDepth(0);
 
         this.dmg = dmg;
         this.speed = speed;
