@@ -6,7 +6,7 @@
   "homepage": "https://crazrain.github.io/robotdefence",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/generate-version.js && vite build",
     "preview": "vite preview",
     "deploy": "gh-pages -d dist"
   },

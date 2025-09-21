@@ -1,0 +1,1 @@
+export const GAME_VERSION = '20250921153233';

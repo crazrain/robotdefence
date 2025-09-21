@@ -1,5 +1,4 @@
 // src/core/config.ts
-export const GAME_VERSION = '20250921120000'; // YYYYMMDDHHmmss 형식의 게임 버전
 import { Grade, RarityGroup } from "./types";
 
 export const HERO_ATTACK_POWER_CONFIG = {
