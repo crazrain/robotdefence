@@ -158,7 +158,6 @@ export class GameScene extends Phaser.Scene {
         this.gridManager = new GridManager(this);
         this.heroActionPanel = new HeroActionPanel(
             this,
-            (hero) => this.upgradeHero(hero),
             (hero) => this.sellHero(hero),
             (hero) => this.combineHero(hero)
         );
@@ -283,12 +282,7 @@ export class GameScene extends Phaser.Scene {
         this.toast.show(`영웅 소환! (-${HERO_SUMMON_COST}G)`, THEME.primary);
     }
 
-    private upgradeHero(hero: Hero) {
-        // TODO: 업그레이드 비용 계산 및 골드 차감 로직
-        console.log(`${hero.type} 영웅 업그레이드 시도`);
-        this.toast.show('업그레이드 기능은 준비 중입니다.', THEME.warning);
-        this.heroActionPanel.hide();
-    }
+    
 
     private sellHero(hero: Hero) {
         const sellPrice = hero.getSellPrice();

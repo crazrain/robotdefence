@@ -8,20 +8,16 @@ export class HeroActionPanel {
     private container: Phaser.GameObjects.Container;
     private hero: Hero | null = null;
 
-    private upgradeButtonText!: Phaser.GameObjects.Text;
-    private upgradeButtonContainer!: Phaser.GameObjects.Container;
     private sellButtonText!: Phaser.GameObjects.Text;
     private sellButtonContainer!: Phaser.GameObjects.Container;
     private background!: Phaser.GameObjects.Graphics;
     private combineButtonContainer!: Phaser.GameObjects.Container;
 
-    private onUpgrade: (hero: Hero) => void;
     private onSell: (hero: Hero) => void;
     private onCombine: (hero: Hero) => void;
 
-    constructor(scene: Phaser.Scene, onUpgrade: (hero: Hero) => void, onSell: (hero: Hero) => void, onCombine: (hero: Hero) => void) {
+    constructor(scene: Phaser.Scene, onSell: (hero: Hero) => void, onCombine: (hero: Hero) => void) {
         this.scene = scene;
-        this.onUpgrade = onUpgrade;
         this.onSell = onSell;
         this.onCombine = onCombine;
 
@@ -38,24 +34,19 @@ export class HeroActionPanel {
         this.background.lineStyle(2, 0xffffff, 0.5);
         this.background.strokeRoundedRect(-100, -40, 200, 80, 10);
 
-        const { container: upgradeButton, text: upgradeText } = this.createButton('업그레이드', -50, 0, () => {
-            if (this.hero) this.onUpgrade(this.hero);
-        });
-        const { container: sellButton, text: sellText } = this.createButton('판매', 50, 0, () => {
+        const { container: sellButton, text: sellText } = this.createButton('판매', 0, 0, () => {
             if (this.hero) this.onSell(this.hero);
         });
 
-        const { container: combineButton } = this.createButton('합성', 100, 0, () => {
+        const { container: combineButton } = this.createButton('합성', 0, 0, () => {
             if (this.hero) this.onCombine(this.hero);
         });
         this.combineButtonContainer = combineButton;
 
-        this.upgradeButtonContainer = upgradeButton;
-        this.upgradeButtonText = upgradeText;
         this.sellButtonContainer = sellButton;
         this.sellButtonText = sellText;
 
-        this.container.add([this.background, upgradeButton, sellButton, combineButton]);
+        this.container.add([this.background, sellButton, combineButton]);
     }
 
     private createButton(text: string, x: number, y: number, onClick: () => void): {
@@ -107,39 +98,32 @@ export class HeroActionPanel {
         this.background.clear(); // 이전 배경 지우기
 
         if (canCombine) {
-            // 3개 버튼: 업그레이드, 판매, 합성
-            this.upgradeButtonContainer.setVisible(true).setPosition(-100, 0);
-            this.sellButtonContainer.setVisible(true).setPosition(0, 0);
-            this.combineButtonContainer.setVisible(true).setPosition(100, 0);
+            // 2개 버튼: 판매, 합성
+            this.sellButtonContainer.setVisible(true).setPosition(-50, 0);
+            this.combineButtonContainer.setVisible(true).setPosition(50, 0);
 
             this.background.fillStyle(0x000000, 0.7);
-            this.background.fillRoundedRect(-150, -40, 300, 80, 10); // 넓은 배경
+            this.background.fillRoundedRect(-100, -40, 200, 80, 10); // 중간 크기 배경
             this.background.lineStyle(2, 0xffffff, 0.5);
-            this.background.strokeRoundedRect(-150, -40, 300, 80, 10);
+            this.background.strokeRoundedRect(-100, -40, 200, 80, 10);
         } else if (isRank5) {
-            // 5등급: '업그레이드' 버튼만 표시 (판매 불가)
-            this.upgradeButtonContainer.setVisible(true).setPosition(0, 0);
+            // 5등급: 아무 버튼도 표시하지 않음 (판매, 업그레이드, 합성 불가)
             this.sellButtonContainer.setVisible(false);
+            this.combineButtonContainer.setVisible(false);
+            this.hide(); // 패널 자체를 숨김
+            return;
+        } else {
+            // 1~4등급 (합성 불가 시): '판매' 버튼만 표시
+            this.sellButtonContainer.setVisible(true).setPosition(0, 0);
             this.combineButtonContainer.setVisible(false);
 
             this.background.fillStyle(0x000000, 0.7);
             this.background.fillRoundedRect(-50, -40, 100, 80, 10); // 작은 배경
             this.background.lineStyle(2, 0xffffff, 0.5);
             this.background.strokeRoundedRect(-50, -40, 100, 80, 10);
-        } else {
-            // 1~4등급 (합성 불가 시): '업그레이드', '판매' 버튼 표시
-            this.upgradeButtonContainer.setVisible(true).setPosition(-50, 0);
-            this.sellButtonContainer.setVisible(true).setPosition(50, 0);
-            this.combineButtonContainer.setVisible(false);
-
-            this.background.fillStyle(0x000000, 0.7);
-            this.background.fillRoundedRect(-100, -40, 200, 80, 10); // 중간 크기 배경
-            this.background.lineStyle(2, 0xffffff, 0.5);
-            this.background.strokeRoundedRect(-100, -40, 200, 80, 10);
         }
 
         // 버튼 텍스트는 항상 업데이트
-        this.upgradeButtonText.setText(`업그레이드\n(준비중)`);
         this.sellButtonText.setText(`판매\n(+${sellPrice}G)`);
     }
 
