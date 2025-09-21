@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Enemy } from './Enemy';
 
-export class Projectile extends Phaser.GameObjects.Arc {
+export class Projectile extends Phaser.GameObjects.Image {
     dmg: number;
     speed: number;
     vx = 0;
@@ -9,11 +9,20 @@ export class Projectile extends Phaser.GameObjects.Arc {
     alive = true;
     target?: Enemy;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, dmg: number, speed: number, target: Enemy | undefined, color: number) {
-        super(scene, x, y, 6, 0, 360, false);
+    constructor(scene: Phaser.Scene, x: number, y: number, dmg: number, speed: number, target: Enemy | undefined, textureKey: string, color?: number) {
+        super(scene, x, y, textureKey);
+        
+        if (!scene.textures.exists(textureKey)) {
+            const graphics = scene.add.graphics();
+            graphics.fillStyle(color || 0xffffff, 1);
+            graphics.fillCircle(0, 0, 6);
+            graphics.generateTexture(textureKey, 12, 12);
+            graphics.destroy();
+        }
+
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        this.setFillStyle(color, 1);
+
         this.dmg = dmg;
         this.speed = speed;
         this.target = target;

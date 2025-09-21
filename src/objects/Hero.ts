@@ -177,6 +177,23 @@ export class Hero extends Phaser.GameObjects.Image {
         return inRange.sort((a, b) => (b.wpIndex - a.wpIndex) || (this.distanceTo(a) - this.distanceTo(b)))[0];
     }
 
+    private getProjectileTexture(): string {
+        switch (this.getGrade()) {
+            case 'Basic':
+                return 'BasicFire';
+            case 'Rare':
+                return 'RareFire';
+            case 'Epic':
+                return 'EpicFire';
+            case 'Legendary':
+                return 'LegendaryFire';
+            case 'Mythical':
+                return 'mythical_projectile'; // This texture won't be preloaded, so it will be generated.
+            default:
+                return 'mythical_projectile';
+        }
+    }
+
     private shoot(projectiles: Projectile[], target: Enemy) {
         if (!this.scene || !this.scene.sys || !this.scene.sys.isActive) return;
 
@@ -202,7 +219,8 @@ export class Hero extends Phaser.GameObjects.Image {
             }
         });
 
-        const p = new Projectile(this.scene, fireX, fireY, this.atk, 600, target, this.getRankBackgroundColor());
+        const projectileTexture = this.getProjectileTexture();
+        const p = new Projectile(this.scene, fireX, fireY, this.atk, 600, target, projectileTexture, this.getRankBackgroundColor());
         const dx = target.x - fireX, dy = target.y - fireY;
         const dist = Math.hypot(dx, dy) || 1;
         p.vx = (dx / dist) * 600;

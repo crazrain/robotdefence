@@ -116,6 +116,10 @@ export class GameScene extends Phaser.Scene {
             this.load.audio(hero.imageKey + '_sound', hero.fireSound);
             this.load.image(hero.imageKey + '_effect', hero.fireEffect);
         });
+        this.load.image('BasicFire', 'assets/images/BasicFire.png');
+        this.load.image('RareFire', 'assets/images/RareFire.png');
+        this.load.image('EpicFire', 'assets/images/EpicFire.png');
+        this.load.image('LegendaryFire', 'assets/images/LegendaryFire.png');
         // 합성 이펙트용 이미지
         this.load.image('star_particle', 'assets/images/star_particle.png');
     }
