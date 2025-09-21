@@ -21,7 +21,7 @@ import { ModeSelector } from '../ui/ModeSelector';
 import { SummonButton } from '../ui/SummonButton';
 import { Spawner } from '../systems/Spawner';
 import { WaveController } from '../systems/WaveController';
-import { getDefaultConfig, type GameConfig, PERMANENT_UPGRADE_CONFIG, getRarityGroup } from '../core/config';
+import { getDefaultConfig, type GameConfig, PERMANENT_UPGRADE_CONFIG, getRarityGroup, GAME_VERSION } from '../core/config';
 import { RoundTimer } from '../systems/RoundTimer';
 import { Hero } from '../objects/Hero';
 import { GridManager } from '../systems/GridManager';
@@ -132,6 +132,13 @@ export class GameScene extends Phaser.Scene {
         this.resetRuntimeArrays();
 
         this.cameras.main.setBackgroundColor(THEME.background);
+
+        // 게임 버전 표시
+        this.add.text(GAME_WIDTH - 10, GAME_HEIGHT - 10, `v${GAME_VERSION}`, {
+            fontSize: '12px',
+            color: THEME.text,
+            fontFamily: THEME.font
+        }).setOrigin(1, 1).setDepth(100);
 
         // 경로 디버그(상단 루프)
         for (let i = 0; i < this.waypointsTop.length; i++) {
