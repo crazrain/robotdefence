@@ -27,6 +27,15 @@ export class Enemy extends Phaser.GameObjects.Arc {
         this.healthBar = scene.add.graphics();
         this.healthBar.setDepth(1); // 몬스터보다 위에 표시되도록 z-index 설정
         this.updateHealthBar();
+
+        this.scene.add.tween({
+            targets: this,
+            scale: { from: 1, to: 1.5 },
+            ease: 'Sine.easeInOut',
+            duration: 250,
+            yoyo: true,
+            repeat: -1,
+        });
     }
 
     takeDamage(dmg: number) {
