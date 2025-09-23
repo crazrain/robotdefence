@@ -17,7 +17,8 @@ export class Spawner {
     spawnTop(w: WaveDef, enemies: Enemy[]) {
         const hp = Math.floor(BASE_HP * w.hpScale);
         // 상단 자리에서 시작, 첫 타겟은 상단 루프의 좌상(인덱스 0)
-        const e = new Enemy(this.scene, SEAT.top.x, SEAT.top.y, this.waypointsTop, hp, w.speed, 0);
+        const radius = w.isBoss ? 32 : 12;
+        const e = new Enemy(this.scene, SEAT.top.x, SEAT.top.y, this.waypointsTop, hp, w.speed, 0, radius);
         enemies.push(e);
     }
 
@@ -25,7 +26,8 @@ export class Spawner {
     spawnBottom(w: WaveDef, enemies: Enemy[], offset: { x: number; y: number }) {
         const hp = Math.floor(BASE_HP * w.hpScale);
         // 아래 자리에서 시작, 첫 타겟은 하단 루프의 좌상(인덱스 0)
-        const e = new Enemy(this.scene, SEAT.bottom.x + offset.x, SEAT.bottom.y + offset.y, this.waypointsBottom, hp, w.speed, 0);
+        const radius = w.isBoss ? 32 : 12;
+        const e = new Enemy(this.scene, SEAT.bottom.x + offset.x, SEAT.bottom.y + offset.y, this.waypointsBottom, hp, w.speed, 0, radius);
         enemies.push(e);
     }
 }

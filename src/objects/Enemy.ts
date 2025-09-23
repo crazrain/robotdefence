@@ -11,11 +11,11 @@ export class Enemy extends Phaser.GameObjects.Arc {
     alive = true;
     healthBar!: Phaser.GameObjects.Graphics;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, waypoints: Vec2[], hp: number, speed: number, wpIndexAtJoin: number) {
-        super(scene, x, y, 16, 0, 360, false);
+    constructor(scene: Phaser.Scene, x: number, y: number, waypoints: Vec2[], hp: number, speed: number, wpIndexAtJoin: number, radius: number) {
+        super(scene, x, y, radius, 0, 360, false);
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        (this.body as Phaser.Physics.Arcade.Body).setCircle(16).setOffset(-16, -16);
+        (this.body as Phaser.Physics.Arcade.Body).setCircle(radius).setOffset(-radius, -radius);
         this.setFillStyle(0xff4444, 1);
         this.waypoints = waypoints;
         this.hp = hp;
@@ -71,7 +71,7 @@ export class Enemy extends Phaser.GameObjects.Arc {
             const vy = (dy / dist) * this.speed;
             this.x += vx * dt;
             this.y += vy * dt;
-            this.healthBar.setPosition(this.x, this.y - 20); // 체력 바 위치 업데이트
+            this.healthBar.setPosition(this.x, this.y - (this.radius + 5)); // 체력 바 위치 업데이트
         }
     }
 
@@ -85,15 +85,16 @@ export class Enemy extends Phaser.GameObjects.Arc {
         this.healthBar.clear();
         const percentage = this.hp / this.maxHp;
         const color = this.getHealthBarColor(percentage);
-        const barWidth = 32 * percentage; // 몬스터 너비에 맞춰 조절
+        const barFullWidth = this.radius * 2;
+        const barWidth = barFullWidth * percentage;
 
         this.healthBar.fillStyle(0x000000, 0.5); // 배경
-        this.healthBar.fillRect(-16, -15, 32, 5);
+        this.healthBar.fillRect(-this.radius, -10, barFullWidth, 5);
         this.healthBar.lineStyle(1, 0xffffff, 1); // 외곽선 추가 (흰색)
-        this.healthBar.strokeRect(-16, -15, 32, 5);
+        this.healthBar.strokeRect(-this.radius, -10, barFullWidth, 5);
 
         this.healthBar.fillStyle(color, 1);
-        this.healthBar.fillRect(-16, -15, barWidth, 5);
+        this.healthBar.fillRect(-this.radius, -10, barWidth, 5);
     }
 
     private getHealthBarColor(percentage: number): number {
