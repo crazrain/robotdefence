@@ -55,6 +55,10 @@ export class WaveController {
         };
 
         this.onWaveChange();
+
+        if (w.isBoss) {
+            this.scene.events.emit('boss_wave_start');
+        }
     }
 
     update(dt: number, _mode: Mode, enemies: Enemy[]) {

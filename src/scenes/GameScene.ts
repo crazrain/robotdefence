@@ -30,6 +30,7 @@ import { Toast } from '../ui/Toast';
 import { HeroActionPanel } from '../ui/HeroActionPanel';
 import { UpgradeButton } from '../ui/UpgradeButton';
 import { UpgradePanel } from '../ui/UpgradePanel';
+import { BossAlert } from '../ui/BossAlert';
 
 const VOLUME_STORAGE_KEY = 'robot-defence-volume';
 
@@ -183,6 +184,12 @@ export class GameScene extends Phaser.Scene {
 
         // 적 처치 보상 수신
         this.events.on('enemy_killed', this.enemyKilledHandler);
+
+        // 보스 웨이브 시작 이벤트 수신
+        this.events.on('boss_wave_start', () => {
+            const bossAlert = new BossAlert(this);
+            bossAlert.show();
+        });
 
         // 모드 선택 → 웨이브 시작
         this.modeSelector = new ModeSelector(this, (m) => {
