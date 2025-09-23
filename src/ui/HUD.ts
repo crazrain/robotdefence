@@ -35,26 +35,15 @@ export class HUD {
         enemyCount: number,
         maxAlive: number,
         wc: WaveController | undefined,
-        mode: Mode,
-        roundRemainingSec?: number
+        mode: Mode
     ) {
         this.line1.setText(`Gold ${gold}   Units ${unitCount}   Enemies ${enemyCount}/${maxAlive}`);
         if (wc && wc.rt) {
             const waveNum = wc.rt.index + 1;
             const total = wc.waves.length;
-            const roundStr = typeof roundRemainingSec === 'number'
-                ? ` | 라운드 ${formatTime(roundRemainingSec)}`
-                : '';
-            this.line2.setText(`Wave ${waveNum}/${total}  남은시간(웨이브) ${wc.rt.timeLeft.toFixed(1)}s  모드 ${mode === 'solo' ? '1인' : '2인'}${roundStr}`);
+            this.line2.setText(`Wave ${waveNum}/${total}  남은시간(웨이브) ${wc.rt.timeLeft.toFixed(1)}s  모드 ${mode === 'solo' ? '1인' : '2인'}`);
         } else {
             this.line2.setText('');
         }
     }
-}
-
-function formatTime(sec: number) {
-    const s = Math.max(0, Math.floor(sec));
-    const m = Math.floor(s / 60);
-    const r = s % 60;
-    return `${m}:${r.toString().padStart(2, '0')}`;
 }

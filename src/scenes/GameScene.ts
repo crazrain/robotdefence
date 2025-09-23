@@ -23,7 +23,6 @@ import { Spawner } from '../systems/Spawner';
 import { WaveController } from '../systems/WaveController';
 import { getDefaultConfig, type GameConfig, PERMANENT_UPGRADE_CONFIG, getRarityGroup } from '../core/config';
 import { GAME_VERSION } from '../core/version';
-import { RoundTimer } from '../systems/RoundTimer';
 import { Hero } from '../objects/Hero';
 import { GridManager } from '../systems/GridManager';
 import { SpeedControlButton } from '../ui/SpeedControlButton';
@@ -84,9 +83,7 @@ export class GameScene extends Phaser.Scene {
         LegendaryMythical: 0,
     };
 
-    // 라운드(게임) 타임아웃
     private cfg: GameConfig = getDefaultConfig('Normal');
-    private round!: RoundTimer;
 
     // 정리 가드 플래그
     private _cleaned = false;
@@ -157,11 +154,6 @@ export class GameScene extends Phaser.Scene {
             const b = this.waypointsBottom[(i + 1) % this.waypointsBottom.length];
             this.add.line(0, 0, a.x, a.y, b.x, b.y, 0x334455).setOrigin(0).setLineWidth(3);
         }
-
-        // 라운드 타이머(난이도 적용)
-        this.cfg = getDefaultConfig('Normal'); // 난이도 선택 UI 연동 가능
-        this.round = new RoundTimer(this.cfg.roundTimeLimitSec);
-        this.round.start();
 
         // HUD
         this.hud = new HUD(this);
@@ -273,13 +265,6 @@ export class GameScene extends Phaser.Scene {
     update(_: number, delta: number) {
         const dt = (delta / 1000) * this.gameSpeed;
 
-        // 라운드 타이머
-        this.round.update(dt);
-        if (this.round.expired) {
-            this.endGame(false, '라운드 제한 시간 초과');
-            return;
-        }
-
         // 유닛/적/투사체
         for (const u of this.units) u.update(dt, this.enemies, this.projectiles);
         for (const hero of this.heroes) {
@@ -302,8 +287,7 @@ export class GameScene extends Phaser.Scene {
             this.enemies.length,
             MAX_ALIVE,
             this.waves,
-            this.mode,
-            this.round.remaining
+            this.mode
         );
     }
 
@@ -320,8 +304,6 @@ export class GameScene extends Phaser.Scene {
         this.gold -= HERO_SUMMON_COST;
         this.toast.show(`영웅 소환! (-${HERO_SUMMON_COST}G)`, THEME.primary);
     }
-
-    
 
     private sellHero(hero: Hero) {
         const sellPrice = hero.getSellPrice();
