@@ -63,29 +63,36 @@ export class WaveController {
 
         this.rt.timeLeft = Math.max(0, this.rt.timeLeft - dt);
 
-        // 진행률(0~1): 웨이브 경과에 따른 간격 재계산(곡선 적용)
-        const progress = this.waves[this.rt.index].durationSeconds > 0
-            ? 1 - (this.rt.timeLeft / this.waves[this.rt.index].durationSeconds)
-            : 1;
-        this.rt.spawnIntervalBottom = this.computeBottomInterval(w, progress);
+        if (w.isBoss) {
+            if (this.rt.bottomToSpawn > 0) {
+                this.spawner.spawnBottom(w, enemies, { x: 0, y: 0 });
+                this.rt.bottomToSpawn--;
+            }
+        } else {
+            // 진행률(0~1): 웨이브 경과에 따른 간격 재계산(곡선 적용)
+            const progress = this.waves[this.rt.index].durationSeconds > 0
+                ? 1 - (this.rt.timeLeft / this.waves[this.rt.index].durationSeconds)
+                : 1;
+            this.rt.spawnIntervalBottom = this.computeBottomInterval(w, progress);
 
-        // 스폰 타이밍(지터/배치)
-        if (this.rt.bottomToSpawn > 0 && this.rt.spawnIntervalBottom > 0) {
-            this.rt.spawnTimerBottom += dt;
-            while (this.rt.bottomToSpawn > 0 && this.rt.spawnTimerBottom >= this.rt.spawnIntervalBottom) {
-                // 지터 적용(틱마다 소량 변동)
-                const jitter = (w.spawnJitter ?? 0);
-                const jittered = this.rt.spawnIntervalBottom + (jitter ? (Math.random() * 2 - 1) * jitter : 0);
-                // 다음 사이클 타이머 보정
-                this.rt.spawnTimerBottom -= Math.max(0.05, jittered); // 최소 0.05초 캡
+            // 스폰 타이밍(지터/배치)
+            if (this.rt.bottomToSpawn > 0 && this.rt.spawnIntervalBottom > 0) {
+                this.rt.spawnTimerBottom += dt;
+                while (this.rt.bottomToSpawn > 0 && this.rt.spawnTimerBottom >= this.rt.spawnIntervalBottom) {
+                    // 지터 적용(틱마다 소량 변동)
+                    const jitter = (w.spawnJitter ?? 0);
+                    const jittered = this.rt.spawnIntervalBottom + (jitter ? (Math.random() * 2 - 1) * jitter : 0);
+                    // 다음 사이클 타이머 보정
+                    this.rt.spawnTimerBottom -= Math.max(0.05, jittered); // 최소 0.05초 캡
 
-                // 배치 스폰
-                const batch = Math.max(1, w.batchSize ?? 1);
-                for (let i = 0; i < batch && this.rt.bottomToSpawn > 0; i++) {
-                    // 배치 내 오프셋 추가
-                    const offset = { x: (Math.random() - 0.5) * 20, y: (Math.random() - 0.5) * 20 };
-                    this.spawner.spawnBottom(w, enemies, offset);
-                    this.rt.bottomToSpawn--;
+                    // 배치 스폰
+                    const batch = Math.max(1, w.batchSize ?? 1);
+                    for (let i = 0; i < batch && this.rt.bottomToSpawn > 0; i++) {
+                        // 배치 내 오프셋 추가
+                        const offset = { x: (Math.random() - 0.5) * 20, y: (Math.random() - 0.5) * 20 };
+                        this.spawner.spawnBottom(w, enemies, offset);
+                        this.rt.bottomToSpawn--;
+                    }
                 }
             }
         }
@@ -113,8 +120,12 @@ export class WaveController {
         }
     }
 
-    // 스폰 간격 계산: 오버라이드 > 곡선 > 기본(auto)
     private computeBottomInterval(w: WaveDef, progress01: number): number {
+        // 0) 보스 웨이브는 즉시 스폰
+        if (w.isBoss) {
+            return 0;
+        }
+
         // 1) 웨이브가 명시한 고정 간격 우선
         if (w.spawnIntervalBottom && w.spawnIntervalBottom > 0) {
             return Math.max(0.05, w.spawnIntervalBottom * (this.cfg.spawnIntervalScale ?? 1));

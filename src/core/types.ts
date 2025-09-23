@@ -26,6 +26,7 @@ export type WaveDef = {
     bottomCount: number;
     hpScale: number;
     speed: number;
+    isBoss?: boolean;
 
     // 선택 항목(없으면 기본 로직 사용)
     spawnIntervalBottom?: number; // 하단 스폰 간격(초) 고정 오버라이드

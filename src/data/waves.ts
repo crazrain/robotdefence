@@ -21,8 +21,8 @@ export const Waves: WaveDef[] = [
     { durationSeconds: 30, topCount: 0, bottomCount: 60, hpScale: 2.2, speed: 115, spawnIntervalBottom: 0.4, spawnJitter: 0.2 },
     // 9: 점점 느려지지만 매우 강한 적들
     { durationSeconds: 35, topCount: 0, bottomCount: 40, hpScale: 2.5, speed: 100, pacingCurve: 'easeOut' },
-    // 10: 중간 보스 웨이브, 강력한 적 소수 정예
-    { durationSeconds: 20, topCount: 0, bottomCount: 15, hpScale: 4.0, speed: 120, spawnIntervalBottom: 1.0 },
+    // 10: 보스
+    { durationSeconds: 60, topCount: 0, bottomCount: 1, hpScale: 150.0, speed: 100, isBoss: true },
 
     // 11: 다시 시작되는 물량 공세, 하지만 더 강하게
     { durationSeconds: 35, topCount: 0, bottomCount: 70, hpScale: 3.0, speed: 120, spawnJitter: 0.2 },
@@ -43,8 +43,8 @@ export const Waves: WaveDef[] = [
     { durationSeconds: 50, topCount: 0, bottomCount: 70, hpScale: 5.5, speed: 160, spawnJitter: 0.4, pacingCurve: 'easeIn' },
     // 19: 최종 보스 전 마지막 시험
     { durationSeconds: 50, topCount: 0, bottomCount: 50, hpScale: 7.0, speed: 150, pacingCurve: 'easeOut' },
-    // 20: 최종 보스 웨이브, 모든 것을 쏟아붓는 공격
-    { durationSeconds: 30, topCount: 0, bottomCount: 25, hpScale: 10.0, speed: 180, spawnIntervalBottom: 1.0, batchSize: 5 },
+    // 20: 보스
+    { durationSeconds: 60, topCount: 0, bottomCount: 1, hpScale: 300.0, speed: 110, isBoss: true },
 
     // 21: 일반 웨이브
     { durationSeconds: 30, topCount: 0, bottomCount: 27, hpScale: 10.52, speed: 181, spawnIntervalBottom: 0.99, batchSize: 5, spawnJitter: 0.1 },
@@ -73,8 +73,8 @@ export const Waves: WaveDef[] = [
     // 29: 일반 웨이브
     { durationSeconds: 31, topCount: 0, bottomCount: 43, hpScale: 14.96, speed: 189, spawnIntervalBottom: 0.81, batchSize: 6, spawnJitter: 0.1 },
 
-    // 30: 보스 웨이브 - 강력한 적 소수 정예
-    { durationSeconds: 32, topCount: 0, bottomCount: 30, hpScale: 23.34, speed: 209, spawnIntervalBottom: 1.3, batchSize: 7, spawnJitter: 0.2, pacingCurve: 'easeIn' },
+    // 30: 보스
+    { durationSeconds: 60, topCount: 0, bottomCount: 1, hpScale: 500.0, speed: 120, isBoss: true },
 
     // 31: 일반 웨이브
     { durationSeconds: 32, topCount: 0, bottomCount: 47, hpScale: 16.18, speed: 191, spawnIntervalBottom: 0.79, batchSize: 7, spawnJitter: 0.1 },
@@ -103,8 +103,8 @@ export const Waves: WaveDef[] = [
     // 39: 일반 웨이브
     { durationSeconds: 33, topCount: 0, bottomCount: 63, hpScale: 21.37, speed: 199, spawnIntervalBottom: 0.61, batchSize: 8, spawnJitter: 0.1 },
 
-    // 40: 보스 웨이브 - 강력한 적 소수 정예
-    { durationSeconds: 34, topCount: 0, bottomCount: 44, hpScale: 33.06, speed: 219, spawnIntervalBottom: 1.1, batchSize: 9, spawnJitter: 0.2, pacingCurve: 'easeIn' },
+    // 40: 보스
+    { durationSeconds: 60, topCount: 0, bottomCount: 1, hpScale: 800.0, speed: 130, isBoss: true },
 
     // 41: 일반 웨이브
     { durationSeconds: 34, topCount: 0, bottomCount: 67, hpScale: 22.69, speed: 201, spawnIntervalBottom: 0.59, batchSize: 9, spawnJitter: 0.1 },
@@ -133,8 +133,8 @@ export const Waves: WaveDef[] = [
     // 49: 일반 웨이브
     { durationSeconds: 35, topCount: 0, bottomCount: 83, hpScale: 28.85, speed: 209, spawnIntervalBottom: 0.41, batchSize: 10, spawnJitter: 0.1 },
 
-    // 50: 보스 웨이브 - 강력한 적 소수 정예
-    { durationSeconds: 36, topCount: 0, bottomCount: 58, hpScale: 44.78, speed: 229, spawnIntervalBottom: 0.9, batchSize: 10, spawnJitter: 0.2, pacingCurve: 'easeIn' },
+    // 50: 보스
+    { durationSeconds: 60, topCount: 0, bottomCount: 1, hpScale: 1200.0, speed: 140, isBoss: true },
 
     // 51: 일반 웨이브
     { durationSeconds: 36, topCount: 0, bottomCount: 87, hpScale: 30.51, speed: 211, spawnIntervalBottom: 0.39, batchSize: 10, spawnJitter: 0.1 },
@@ -163,8 +163,8 @@ export const Waves: WaveDef[] = [
     // 59: 일반 웨이브
     { durationSeconds: 37, topCount: 0, bottomCount: 103, hpScale: 37.5, speed: 219, spawnIntervalBottom: 0.21, batchSize: 10, spawnJitter: 0.1 },
 
-    // 60: 보스 웨이브 - 강력한 적 소수 정예
-    { durationSeconds: 38, topCount: 0, bottomCount: 72, hpScale: 58.13, speed: 239, spawnIntervalBottom: 0.7, batchSize: 10, spawnJitter: 0.2, pacingCurve: 'easeIn' },
+    // 60: 보스
+    { durationSeconds: 60, topCount: 0, bottomCount: 1, hpScale: 1700.0, speed: 150, isBoss: true },
 
     // 61: 일반 웨이브
     { durationSeconds: 38, topCount: 0, bottomCount: 107, hpScale: 39.29, speed: 221, spawnIntervalBottom: 0.19, batchSize: 10, spawnJitter: 0.1 },
@@ -193,8 +193,8 @@ export const Waves: WaveDef[] = [
     // 69: 일반 웨이브
     { durationSeconds: 39, topCount: 0, bottomCount: 123, hpScale: 47.16, speed: 229, spawnIntervalBottom: 0.1, batchSize: 10, spawnJitter: 0.1 },
 
-    // 70: 보스 웨이브 - 강력한 적 소수 정예
-    { durationSeconds: 40, topCount: 0, bottomCount: 86, hpScale: 73.04, speed: 249, spawnIntervalBottom: 0.6, batchSize: 10, spawnJitter: 0.2, pacingCurve: 'easeIn' },
+    // 70: 보스
+    { durationSeconds: 60, topCount: 0, bottomCount: 1, hpScale: 2300.0, speed: 160, isBoss: true },
 
     // 71: 일반 웨이브
     { durationSeconds: 40, topCount: 0, bottomCount: 127, hpScale: 48.21, speed: 231, spawnIntervalBottom: 0.1, batchSize: 10, spawnJitter: 0.1 },
@@ -223,6 +223,6 @@ export const Waves: WaveDef[] = [
     // 79: 일반 웨이브
     { durationSeconds: 41, topCount: 0, bottomCount: 143, hpScale: 57.1, speed: 239, spawnIntervalBottom: 0.1, batchSize: 10, spawnJitter: 0.1 },
 
-    // 80: 보스 웨이브 - 강력한 적 소수 정예
-    { durationSeconds: 42, topCount: 0, bottomCount: 100, hpScale: 88.9, speed: 259, spawnIntervalBottom: 0.5, batchSize: 10, spawnJitter: 0.2, pacingCurve: 'easeIn' },
+    // 80: 보스
+    { durationSeconds: 60, topCount: 0, bottomCount: 1, hpScale: 3000.0, speed: 170, isBoss: true },
 ];
