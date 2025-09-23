@@ -11,12 +11,15 @@ export class Enemy extends Phaser.GameObjects.Arc {
     alive = true;
     healthBar!: Phaser.GameObjects.Graphics;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, waypoints: Vec2[], hp: number, speed: number, wpIndexAtJoin: number, radius: number) {
+    constructor(scene: Phaser.Scene, x: number, y: number, waypoints: Vec2[], hp: number, speed: number, wpIndexAtJoin: number, radius: number, hpScale: number) {
         super(scene, x, y, radius, 0, 360, false);
         scene.add.existing(this);
         scene.physics.add.existing(this);
         (this.body as Phaser.Physics.Arcade.Body).setCircle(radius).setOffset(-radius, -radius);
-        this.setFillStyle(0xff4444, 1);
+
+        const color = this.getColorFromHpScale(hpScale);
+        this.setFillStyle(color, 1);
+
         this.waypoints = waypoints;
         this.hp = hp;
         this.maxHp = hp;        // 최대 체력 기록
@@ -79,6 +82,25 @@ export class Enemy extends Phaser.GameObjects.Arc {
     destroy(fromScene?: boolean) {
         super.destroy(fromScene);
         this.healthBar.destroy();
+    }
+
+    private getColorFromHpScale(hpScale: number): number {
+        const minHpScale = 1.5;
+        const maxHpScale = 30.0;
+
+        const startColor = { r: 0, g: 255, b: 255 }; // Cyan
+        const endColor = { r: 255, g: 0, b: 0 };   // Red
+
+        const fraction = Phaser.Math.Clamp((hpScale - minHpScale) / (maxHpScale - minHpScale), 0, 1);
+
+        const color = Phaser.Display.Color.Interpolate.ColorWithColor(
+            new Phaser.Display.Color(startColor.r, startColor.g, startColor.b),
+            new Phaser.Display.Color(endColor.r, endColor.g, endColor.b),
+            100,
+            fraction * 100
+        );
+
+        return Phaser.Display.Color.GetColor(color.r, color.g, color.b);
     }
 
     private updateHealthBar() {
