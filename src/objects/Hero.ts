@@ -27,6 +27,7 @@ export class Hero extends Phaser.GameObjects.Image {
     public skills: HeroSkill[];
     private currentAttackSpeedModifier: number = 1;
     private berserkDurationLeft: number = 0;
+    private lastSoundPlayTime: number = 0; // New property to track last sound play time
 
     private static heroRankBackgroundColors: { [key: number]: number } = {
         1: 0x95a5a6, // Gray (연한 회색)
@@ -264,7 +265,11 @@ export class Hero extends Phaser.GameObjects.Image {
     private shoot(projectiles: Projectile[], target: Enemy) {
         if (!this.scene || !this.scene.sys || !this.scene.sys.isActive) return;
 
-        this.scene.sound.play(this.fireSoundKey, { volume: 0.5 });
+        const SOUND_COOLDOWN = 0.1; // 100ms cooldown
+        if (this.scene.time.now - this.lastSoundPlayTime > SOUND_COOLDOWN * 1000) {
+            this.scene.sound.play(this.fireSoundKey, { volume: 0.5 });
+            this.lastSoundPlayTime = this.scene.time.now;
+        }
 
         const angle = Phaser.Math.Angle.Between(this.x, this.y, target.x, target.y);
         const offset = 20;
