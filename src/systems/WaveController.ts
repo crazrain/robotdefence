@@ -111,10 +111,16 @@ export class WaveController {
 
         // 웨이브 시간 종료 정책
         const isLastWave = this.rt.index === this.waves.length - 1;
-        if (this.rt.timeLeft <= 0 && !isLastWave) { // 마지막 웨이브가 아닐 때만 시간 종료로 클리어
-            this.onWaveCleared(this.rt.index);
-            this.nextOrWin(_mode);
-            return;
+        if (this.rt.timeLeft <= 0) {
+            if (w.isBoss) {
+                this.onGameOver('보스 웨이브 시간 초과!');
+                return;
+            }
+            if (!isLastWave) { // 마지막 웨이브가 아닐 때만 시간 종료로 클리어
+                this.onWaveCleared(this.rt.index);
+                this.nextOrWin(_mode);
+                return;
+            }
         }
 
         // 스폰 완료 후 전멸 시 조기 진행
