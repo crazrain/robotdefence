@@ -11,11 +11,10 @@ import {
     removeHeroFromCell,
     isCellEmpty,
     isCellFull,
-    MAX_HEROES_PER_CELL
 } from '../core/Grid';
 import { Hero } from '../objects/Hero';
 import { HERO_MOVE_RANGE, MAX_HEROES, THEME } from '../core/constants';
-import { HEROES_DATA, HERO_SUMMON_COST } from '../data/heroData';
+import { HEROES_DATA } from '../data/heroData';
 import type { Grade, HeroType } from '../core/types';
 import { getRarityGroup } from '../core/config';
 
@@ -76,9 +75,9 @@ export class GridManager {
         }
     }
 
-    public trySummonHero() {
-        if (this.scene.heroes.length >= MAX_HEROES) {
-            this.scene.toast.show(`영웅은 ${MAX_HEROES}명까지 소환할 수 있습니다`, THEME.danger);
+    public trySummonHero(): boolean {
+        if (this.scene.entityManager.heroes.length >= MAX_HEROES) {
+            this.scene.uiManager.toast.show(`영웅은 ${MAX_HEROES}명까지 소환할 수 있습니다`, THEME.danger);
             return false;
         }
 
@@ -101,15 +100,15 @@ export class GridManager {
 
         for (const targetCell of cellsToTry) {
             const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
-            
+
             const grade = this.getGradeFromHeroType(randomHeroData.type);
             const rarityGroup = getRarityGroup(grade);
-            const permanentUpgradeLevel = this.scene.permanentUpgradeLevels[rarityGroup];
+            const permanentUpgradeLevel = this.scene.upgradeManager.permanentUpgradeLevels[rarityGroup];
             const newHero = new Hero(this.scene, targetCellCenterX, targetCellCenterY, randomHeroData.imageKey, permanentUpgradeLevel);
 
             if (addHeroToCell(targetCell, newHero)) {
                 newHero.setDepth(5);
-                this.scene.heroes.push(newHero);
+                this.scene.entityManager.addHero(newHero);
                 newHero.cell = targetCell;
                 this.redrawAllCellBackgrounds();
                 this.repositionHeroesInCell(targetCell);
@@ -123,7 +122,7 @@ export class GridManager {
             }
         }
 
-        this.scene.toast.show('배치 가능한 자리가 없습니다', THEME.danger);
+        this.scene.uiManager.toast.show('배치 가능한 자리가 없습니다', THEME.danger);
         return false;
     }
 
@@ -131,8 +130,8 @@ export class GridManager {
         const clickedGameObjects = this.scene.input.manager.hitTest(pointer, this.scene.children.list, this.scene.cameras.main);
         const clickedHero = clickedGameObjects.find(obj => obj instanceof Hero) as Hero | undefined;
 
-        if (this.scene.heroActionPanel.isVisible() && !clickedHero) {
-            this.scene.heroActionPanel.hide();
+        if (this.scene.uiManager.heroActionPanel.isVisible() && !clickedHero) {
+            this.scene.uiManager.heroActionPanel.hide();
         }
         if (this.selectedCell && this.selectedHero) {
             const clickedCellCoords = worldToCell(pointer.worldX, pointer.worldY, this.gridMetrics);
@@ -171,16 +170,16 @@ export class GridManager {
             this.selectedHero = clickedHero;
             this.drawRangeDisplay(clickedHero);
             this.drawMovableCells();
-            this.scene.heroActionPanel.show(clickedHero);
+            this.scene.uiManager.heroActionPanel.show(clickedHero);
         } else {
             this.clearSelection();
         }
     }
-    
+
     private moveOrSwapHeroes(oldCell: GridCell, targetCell: GridCell) {
         const { x: oldCellCenterX, y: oldCellCenterY } = cellToWorld(oldCell.col, oldCell.row, this.gridMetrics);
         const { x: targetCellCenterX, y: targetCellCenterY } = cellToWorld(targetCell.col, targetCell.row, this.gridMetrics);
-        
+
         if (isCellEmpty(targetCell)) { // Simple move
             const heroesToMove = [...oldCell.occupiedHeroes];
             oldCell.occupiedHeroes.length = 0;
@@ -230,9 +229,9 @@ export class GridManager {
                 this.scene.tweens.add({ targets: heroInCell, x: targetX, y: targetY, duration: 300, ease: 'Power2' });
             });
         }
-        heroToRemove.destroy();
-        this.scene.heroes = this.scene.heroes.filter(h => h !== heroToRemove);
+        this.scene.entityManager.removeHero(heroToRemove);
     }
+
     public checkForCombination(cell: GridCell) {
         if (cell.occupiedHeroes.length < 3) return;
 
@@ -248,8 +247,7 @@ export class GridManager {
             const heroesToCombine = [...cell.occupiedHeroes];
 
             heroesToCombine.forEach(h => {
-                this.scene.heroes = this.scene.heroes.filter(sceneHero => sceneHero !== h);
-                h.destroy();
+                this.scene.entityManager.removeHero(h);
             });
             cell.occupiedHeroes.length = 0;
 
@@ -273,14 +271,14 @@ export class GridManager {
             const finalCell = preferredCell || cell;
 
             const { x: finalCellCenterX, y: finalCellCenterY } = cellToWorld(finalCell.col, finalCell.row, this.gridMetrics);
-            
+
             const nextGrade = this.getGradeFromHeroType(nextHeroData.type);
             const nextRarityGroup = getRarityGroup(nextGrade);
-            const nextPermanentUpgradeLevel = this.scene.permanentUpgradeLevels[nextRarityGroup];
+            const nextPermanentUpgradeLevel = this.scene.upgradeManager.permanentUpgradeLevels[nextRarityGroup];
             const newHero = new Hero(this.scene, finalCellCenterX, finalCellCenterY, nextHeroData.imageKey, nextPermanentUpgradeLevel);
 
             newHero.setDepth(5);
-            this.scene.heroes.push(newHero);
+            this.scene.entityManager.addHero(newHero);
             addHeroToCell(finalCell, newHero);
             newHero.cell = finalCell;
             this.repositionHeroesInCell(finalCell);
@@ -298,15 +296,14 @@ export class GridManager {
                 onComplete: () => fx.destroy()
             });
 
-            this.scene.toast.show(`${rankToCombine}등급 ➡️ ${nextRank}등급 합성!`, THEME.success);
+            this.scene.uiManager.toast.show(`${rankToCombine}등급 ➡️ ${nextRank}등급 합성!`, THEME.success);
 
             this.redrawAllCellBackgrounds();
-
         }
     }
 
     private getRandomHeroTypeByWeight(): HeroType {
-        if (this.scene.summonLevel !== this._cachedSummonLevel) {
+        if (this.scene.upgradeManager.summonLevel !== this._cachedSummonLevel) {
             this.recalculateProbabilities();
         }
 
@@ -325,7 +322,7 @@ export class GridManager {
     }
 
     private recalculateProbabilities() {
-        this._cachedSummonLevel = this.scene.summonLevel;
+        this._cachedSummonLevel = this.scene.upgradeManager.summonLevel;
 
         const heroTypes: HeroType[] = ['TypeA', 'TypeB', 'TypeC', 'TypeD', 'TypeE'];
 
@@ -423,12 +420,12 @@ export class GridManager {
         this.rangeGfx.strokeCircle(hero.x, hero.y, hero.range);
     }
 
-    private clearSelection() {
+    public clearSelection() {
         this.rangeGfx?.clear();
         this.selectedCell = null;
         this.selectedHero = null;
         this.clearMovableCells();
-        this.scene.heroActionPanel.hide();
+        this.scene.uiManager.heroActionPanel.hide();
     }
 
     private calculateMovableCells(currentCell: GridCell): GridCell[] {
@@ -472,7 +469,7 @@ export class GridManager {
         this.movableCellRects.forEach(rect => rect.destroy());
         this.movableCellRects.length = 0;
     }
-    
+
     public cleanup(hard = false) {
         this.clearMovableCells();
         this.rangeGfx?.clear();

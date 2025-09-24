@@ -3,7 +3,6 @@ import type { GameConfig } from '../core/config';
 import type { WaveDef, WaveRuntime, Mode } from '../core/types';
 import { Spawner } from './Spawner';
 import { Waves } from '../data/waves';
-import { MAX_ALIVE } from '../core/constants';
 import { Enemy } from '../objects/Enemy';
 
 export class WaveController {
@@ -15,6 +14,7 @@ export class WaveController {
     onWaveChange: () => void;
     onWin: () => void;
     onWaveCleared: (waveIndex: number) => void;
+    MAX_ALIVE: number;
 
     constructor(
         private scene: Phaser.Scene,
@@ -23,7 +23,8 @@ export class WaveController {
         onGameOver: (reason: string) => void,
         onWaveChange: () => void,
         onWin: () => void,
-        onWaveCleared: (waveIndex: number) => void
+        onWaveCleared: (waveIndex: number) => void,
+        max_alive: number
     ) {
         this.spawner = spawner;
         this.cfg = cfg;
@@ -31,6 +32,7 @@ export class WaveController {
         this.onWaveChange = onWaveChange;
         this.onWin = onWin;
         this.onWaveCleared = onWaveCleared;
+        this.MAX_ALIVE = max_alive;
     }
 
     start(_mode: Mode, index = 0) {
@@ -102,7 +104,7 @@ export class WaveController {
         }
 
         // 패배/클리어 판정
-        if (enemies.length >= MAX_ALIVE) {
+        if (enemies.length >= this.MAX_ALIVE) {
             this.onGameOver('적이 너무 많이 쌓였습니다(100 마리).');
             return;
         }
