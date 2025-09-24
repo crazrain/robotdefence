@@ -114,6 +114,7 @@ export class Hero extends Phaser.GameObjects.Image {
                 if (skillLevelData.properties.damage) {
                     this.currentAttackSpeedModifier = 1 + skillLevelData.properties.damage; // damage property is used for attack speed increase
                     this.berserkDurationLeft = skillLevelData.properties.duration || 0;
+                    this.setTint(0xff0000); // Red tint for Berserk
                     console.log(`Berserk activated! Attack speed modifier: ${this.currentAttackSpeedModifier}, Duration: ${this.berserkDurationLeft}`);
                 }
                 break;
@@ -203,6 +204,7 @@ export class Hero extends Phaser.GameObjects.Image {
             this.berserkDurationLeft = Math.max(0, this.berserkDurationLeft - dt);
             if (this.berserkDurationLeft === 0) {
                 this.currentAttackSpeedModifier = 1; // Reset attack speed modifier
+                this.clearTint(); // Remove tint when Berserk ends
                 console.log('Berserk effect ended.');
             }
         }
