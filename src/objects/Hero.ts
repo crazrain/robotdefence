@@ -7,6 +7,8 @@ import { HEROES_DATA, HERO_SELL_RETURN_RATE } from '../data/heroData';
 import { Enemy } from './Enemy';
 import { Projectile } from './Projectile';
 import { calculateHeroDamage } from "../core/config";
+import { HeroSkill, Skill, SkillLevel } from '../core/types';
+import { SKILLS_DATA } from '../data/skillData';
 
 export class Hero extends Phaser.GameObjects.Image {
     public type: HeroType;
@@ -22,6 +24,9 @@ export class Hero extends Phaser.GameObjects.Image {
     private fireEffectKey: string;
     public cell: GridCell | null = null;
     private permanentUpgradeLevel: number;
+    public skills: HeroSkill[];
+    private currentAttackSpeedModifier: number = 1;
+    private berserkDurationLeft: number = 0;
 
     private static heroRankBackgroundColors: { [key: number]: number } = {
         1: 0x95a5a6, // Gray (연한 회색)
@@ -56,6 +61,7 @@ export class Hero extends Phaser.GameObjects.Image {
         this.type = heroData.type;
         this.level = 1;
         this.permanentUpgradeLevel = permanentUpgradeLevel;
+        this.skills = heroData.skills;
 
         const heroTypeToRankMap: Record<HeroType, number> = {
             'TypeA': 1,
@@ -90,6 +96,29 @@ export class Hero extends Phaser.GameObjects.Image {
     upgrade() {
         this.level++;
         this.atk = calculateHeroDamage(this.getGrade(), this.level, this.imageKey, this.permanentUpgradeLevel);
+    }
+
+    levelUpSkill(skillId: string) {
+        const skill = this.skills.find(s => s.skillId === skillId);
+        if (skill) {
+            skill.level++;
+        }
+    }
+
+    applySkillEffects(heroSkill: HeroSkill) {
+        const skillLevelData = this.getCurrentSkillLevelData(heroSkill);
+        if (!skillLevelData) return;
+
+        switch (heroSkill.skillId) {
+            case 'berserk':
+                if (skillLevelData.properties.damage) {
+                    this.currentAttackSpeedModifier = 1 + skillLevelData.properties.damage; // damage property is used for attack speed increase
+                    this.berserkDurationLeft = skillLevelData.properties.duration || 0;
+                    console.log(`Berserk activated! Attack speed modifier: ${this.currentAttackSpeedModifier}, Duration: ${this.berserkDurationLeft}`);
+                }
+                break;
+            // Add other skills here
+        }
     }
 
     public updateAttackWithPermanentUpgrade(permanentUpgradeLevel: number) {
@@ -143,8 +172,40 @@ export class Hero extends Phaser.GameObjects.Image {
         return { x: cellCenterX + offsetX, y: cellCenterY + offsetY };
     }
 
+    private getSkillData(heroSkill: HeroSkill): Skill | undefined {
+        return SKILLS_DATA.find(s => s.id === heroSkill.skillId);
+    }
+
+    private getCurrentSkillLevelData(heroSkill: HeroSkill): SkillLevel | undefined {
+        const skillData = this.getSkillData(heroSkill);
+        if (!skillData) return undefined;
+        return skillData.levels.find(level => level.level === heroSkill.level);
+    }
+
+    private checkAndActivateSkills() {
+        this.skills.forEach(heroSkill => {
+            const skillLevelData = this.getCurrentSkillLevelData(heroSkill);
+            if (skillLevelData && skillLevelData.properties.activationChance) {
+                if (Math.random() < skillLevelData.properties.activationChance) {
+                    console.log(`${this.name} activated skill ${heroSkill.skillId} at level ${heroSkill.level}!`);
+                    // Placeholder for applying skill effects
+                    this.applySkillEffects(heroSkill);
+                }
+            }
+        });
+    }
+
     update(dt: number, enemies: Enemy[], projectiles: Projectile[]) {
         if (!this.scene || !this.scene.sys || !this.scene.sys.isActive) return;
+
+        // Update Berserk duration
+        if (this.berserkDurationLeft > 0) {
+            this.berserkDurationLeft = Math.max(0, this.berserkDurationLeft - dt);
+            if (this.berserkDurationLeft === 0) {
+                this.currentAttackSpeedModifier = 1; // Reset attack speed modifier
+                console.log('Berserk effect ended.');
+            }
+        }
 
         this.timeSinceAttack += dt;
         this.targetStick = Math.max(0, this.targetStick - dt);
@@ -161,9 +222,13 @@ export class Hero extends Phaser.GameObjects.Image {
             this.rotation = angle + Math.PI / 2;
         }
 
-        if (this.lastTarget && this.timeSinceAttack >= this.atkInterval) {
+        // Apply attack speed modifier
+        const effectiveAtkInterval = this.atkInterval / this.currentAttackSpeedModifier;
+
+        if (this.lastTarget && this.timeSinceAttack >= effectiveAtkInterval) {
             this.shoot(projectiles, this.lastTarget);
             this.timeSinceAttack = 0;
+            this.checkAndActivateSkills(); // Check for skill activation after attacking
         }
     }
 

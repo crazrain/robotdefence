@@ -44,3 +44,25 @@ export type WaveRuntime = {
     spawnTimerTop: number;
     spawnTimerBottom: number;
 };
+
+export type SkillProperty = 'activationChance' | 'damage' | 'duration' | 'range';
+
+export interface SkillLevel {
+    level: number;
+    description: string;
+    properties: {
+        [key in SkillProperty]?: number;
+    };
+}
+
+export interface Skill {
+    id: string;
+    name: string;
+    maxLevel: number;
+    levels: SkillLevel[];
+}
+
+export interface HeroSkill {
+    skillId: string;
+    level: number;
+}

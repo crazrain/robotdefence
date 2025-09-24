@@ -13,6 +13,7 @@ import { GameStateManager } from '../systems/GameStateManager';
 import { UIManager } from '../systems/UIManager';
 import { HeroManager } from '../systems/HeroManager';
 import { UpgradeManager } from '../systems/UpgradeManager';
+import { SkillManager } from '../systems/SkillManager';
 
 export class GameScene extends Phaser.Scene {
     // 경로
@@ -56,6 +57,7 @@ export class GameScene extends Phaser.Scene {
         this.economyManager = new EconomyManager(this);
         this.upgradeManager = new UpgradeManager(this);
         this.heroManager = new HeroManager(this);
+        this.skillManager = new SkillManager(this);
         this.gridManager = new GridManager(this);
         this.spawner = new Spawner(this, this.waypointsTop, this.waypointsBottom);
         this.waves = new WaveController(
@@ -65,7 +67,8 @@ export class GameScene extends Phaser.Scene {
             (reason) => this.gameStateManager.endGame(false, reason),
             () => {},
             () => this.gameStateManager.winGame(),
-            (waveIndex) => this.economyManager.grantWaveClearGold(waveIndex)
+            (waveIndex) => this.economyManager.grantWaveClearGold(waveIndex),
+            MAX_ALIVE
         );
         this.uiManager = new UIManager(this);
 
