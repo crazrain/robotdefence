@@ -29,6 +29,8 @@ export class Hero extends Phaser.GameObjects.Image {
     private berserkDurationLeft: number = 0;
     private lastSoundPlayTime: number = 0; // New property to track last sound play time
 
+    public static readonly MAX_LEVEL = 12;
+
     private static heroRankBackgroundColors: { [key: number]: number } = {
         1: 0x95a5a6, // Gray (연한 회색)
         2: 0x3498db, // Blue (부드러운 파란색)
@@ -94,8 +96,15 @@ export class Hero extends Phaser.GameObjects.Image {
         }
     }
 
+    isMaxLevel(): boolean {
+        return this.level >= Hero.MAX_LEVEL;
+    }
+
     upgrade() {
-        this.level++;
+        if (this.isMaxLevel()) {
+            return;
+        }
+        this.level = Math.min(Hero.MAX_LEVEL, this.level + 1);
         this.atk = calculateHeroDamage(this.getGrade(), this.level, this.imageKey, this.permanentUpgradeLevel);
     }
 

@@ -6,6 +6,7 @@ import { GameScene } from '../scenes/GameScene';
 type UpgradeInfo = {
     level: number;
     cost: number;
+    isMax: boolean;
 };
 
 export class UpgradePanel {
@@ -87,10 +88,20 @@ export class UpgradePanel {
         buttonContainer.setSize(buttonWidth, buttonHeight);
         buttonContainer.setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
-                this.onUpgrade(rarityGroup);
+                if (buttonContainer.input.enabled) {
+                    this.onUpgrade(rarityGroup);
+                }
             })
-            .on('pointerover', () => buttonBg.fillStyle(parseInt(THEME.neutral_dark.substring(1), 16), 1).fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 8))
-            .on('pointerout', () => buttonBg.fillStyle(parseInt(THEME.neutral.substring(1), 16), 1).fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 8));
+            .on('pointerover', () => {
+                if (buttonContainer.input.enabled) {
+                    buttonBg.fillStyle(parseInt(THEME.neutral_dark.substring(1), 16), 1).fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 8);
+                }
+            })
+            .on('pointerout', () => {
+                if (buttonContainer.input.enabled) {
+                    buttonBg.fillStyle(parseInt(THEME.neutral.substring(1), 16), 1).fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 8);
+                }
+            });
     }
 
     public updateInfo(upgradeInfos: Record<RarityGroup, UpgradeInfo>) {
@@ -99,7 +110,22 @@ export class UpgradePanel {
                 const rarityGroup = child.getData('rarityGroup') as RarityGroup;
                 const info = upgradeInfos[rarityGroup];
                 const infoText = child.getData('infoText') as Phaser.GameObjects.Text;
-                infoText.setText(`레벨: ${info.level} | 비용: ${info.cost}G`);
+                const buttonBg = child.getAt(0) as Phaser.GameObjects.Graphics;
+                const buttonContainer = child as Phaser.GameObjects.Container;
+                const buttonWidth = 400;
+                const buttonHeight = 60;
+
+                if (info.isMax) {
+                    infoText.setText('최대 레벨');
+                    buttonContainer.disableInteractive();
+                    buttonBg.fillStyle(parseInt(THEME.neutral_dark.substring(1), 16), 1);
+                    buttonBg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 8);
+                } else {
+                    infoText.setText(`레벨: ${info.level} | 비용: ${info.cost}G`);
+                    buttonContainer.setInteractive({ useHandCursor: true });
+                    buttonBg.fillStyle(parseInt(THEME.neutral.substring(1), 16), 1);
+                    buttonBg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 8);
+                }
             }
         });
     }
