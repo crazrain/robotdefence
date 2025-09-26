@@ -73,7 +73,7 @@ export class GameScene extends Phaser.Scene {
         this.uiManager = new UIManager(this);
 
         // 전역 사운드 제한 설정
-        this.sound.maxAudio = 24; // 최대 15개의 사운드 동시 재생 허용
+        this.sound.maxAudio = 15; // 최대 15개의 사운드 동시 재생 허용
 
         // 초기 상태 리셋
         this.reset();
