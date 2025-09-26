@@ -19,15 +19,16 @@ export class Hero extends Phaser.GameObjects.Image {
     public range: number;
     public timeSinceAttack = 0;
     public lastTarget?: Enemy;
-    public targetStick = 0;
+    public cell: GridCell | null = null;
     private fireSoundKey: string;
     private fireEffectKey: string;
-    public cell: GridCell | null = null;
     private permanentUpgradeLevel: number;
     public skills: HeroSkill[];
     private currentAttackSpeedModifier: number = 1;
     private berserkDurationLeft: number = 0;
     private lastSoundPlayTime: number = 0; // New property to track last sound play time
+    private searchCooldown: number = 0;
+    private readonly searchInterval: number; // This will be staggered
 
     private static heroRankBackgroundColors: { [key: number]: number } = {
         1: 0x95a5a6, // Gray (연한 회색)
@@ -81,6 +82,19 @@ export class Hero extends Phaser.GameObjects.Image {
         this.setDisplaySize(heroSize, heroSize);
         this.fireSoundKey = heroData.imageKey + '_sound';
         this.fireEffectKey = heroData.imageKey + '_effect';
+
+        // Stagger the initial search so all heroes don't search on frame 1
+        this.searchInterval = 0.25 + Math.random() * 0.25; // Search every 0.25-0.50s
+        this.searchCooldown = Math.random() * this.searchInterval; // Random initial delay
+
+        // this.scene.add.tween({
+        //     targets: this,
+        //     scale: { from: 1, to: 1.5 },
+        //     ease: 'Sine.easeInOut',
+        //     duration: 250,
+        //     yoyo: true,
+        //     repeat: -1,
+        // });
     }
 
     getGrade(): Grade {
@@ -211,13 +225,13 @@ export class Hero extends Phaser.GameObjects.Image {
         }
 
         this.timeSinceAttack += dt;
-        this.targetStick = Math.max(0, this.targetStick - dt);
+        this.searchCooldown = Math.max(0, this.searchCooldown - dt); // Decrement cooldown
 
-        if (!this.lastTarget || !this.lastTarget.alive || this.distanceTo(this.lastTarget) > this.range) {
-            if (this.targetStick <= 0) {
-                this.lastTarget = this.findPriorityTarget(enemies);
-                this.targetStick = 0.3;
-            }
+        const targetIsInvalid = !this.lastTarget || !this.lastTarget.alive || this.distanceTo(this.lastTarget) > this.range;
+
+        if (targetIsInvalid && this.searchCooldown <= 0) {
+            this.lastTarget = this.findPriorityTarget(enemies);
+            this.searchCooldown = this.searchInterval; // Reset cooldown
         }
 
         if (this.lastTarget) {

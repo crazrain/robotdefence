@@ -63,19 +63,22 @@ export class Enemy extends Phaser.GameObjects.Arc {
     update(dt: number) {
         if (!this.alive) return;
 
+        const body = this.body as Phaser.Physics.Arcade.Body;
+        if (!body) return;
+
         const target = this.waypoints[this.wpIndex];
         const dx = target.x - this.x, dy = target.y - this.y;
         const dist = Math.hypot(dx, dy);
 
         if (dist < 4) {
             this.wpIndex = (this.wpIndex + 1) % this.waypoints.length;
+            body.setVelocity(0, 0);
         } else {
             const vx = (dx / dist) * this.speed;
             const vy = (dy / dist) * this.speed;
-            this.x += vx * dt;
-            this.y += vy * dt;
-            this.healthBar.setPosition(this.x, this.y - (this.radius + 5)); // 체력 바 위치 업데이트
+            body.setVelocity(vx, vy);
         }
+        this.healthBar.setPosition(this.x, this.y - (this.radius + 5)); // 체력 바 위치 업데이트
     }
 
     // 몬스터 파괴 시 체력 바도 파괴
