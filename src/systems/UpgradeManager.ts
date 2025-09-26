@@ -4,8 +4,6 @@ import { RarityGroup } from '../core/types';
 import { PERMANENT_UPGRADE_CONFIG, getRarityGroup } from '../core/config';
 import { THEME } from '../core/constants';
 
-const MAX_UPGRADE_LEVEL = 12;
-
 export class UpgradeManager {
     public permanentUpgradeLevels: Record<RarityGroup, number> = {
         NormalRare: 0,
@@ -23,20 +21,13 @@ export class UpgradeManager {
             const level = this.permanentUpgradeLevels[rarityGroup];
             const config = PERMANENT_UPGRADE_CONFIG[rarityGroup];
             const cost = config.baseCost + config.costIncrease * level;
-            const isMax = level >= MAX_UPGRADE_LEVEL;
-            infos[rarityGroup] = { level, cost, isMax };
+            infos[rarityGroup] = { level, cost };
         }
         return infos;
     }
 
     handlePermanentUpgrade(rarityGroup: RarityGroup) {
         const level = this.permanentUpgradeLevels[rarityGroup];
-
-        if (level >= MAX_UPGRADE_LEVEL) {
-            this.scene.uiManager.toast.show('이미 최고 레벨입니다.', THEME.danger);
-            return;
-        }
-
         const config = PERMANENT_UPGRADE_CONFIG[rarityGroup];
         const cost = config.baseCost + config.costIncrease * level;
 
