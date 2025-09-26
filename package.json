@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "node scripts/generate-version.js && vite build",
     "preview": "vite preview",
-    "deploy": "gh-pages -d dist"
+    "deploy": "yarn build && gh-pages -d dist"
   },
   "dependencies": {
     "phaser": "^3.80.0"
