@@ -281,7 +281,7 @@ export class Hero extends Phaser.GameObjects.Image {
 
         const SOUND_COOLDOWN = 0.1; // 100ms cooldown
         if (this.scene.time.now - this.lastSoundPlayTime > SOUND_COOLDOWN * 1000) {
-            this.scene.sound.play(this.fireSoundKey, { volume: 0.5 });
+            (this.scene as GameScene).playSound(this.fireSoundKey, { volume: 0.5 });
             this.lastSoundPlayTime = this.scene.time.now;
         }
 
