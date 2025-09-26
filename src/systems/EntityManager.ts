@@ -18,10 +18,23 @@ export class EntityManager {
         for (const hero of this.heroes) {
             hero.update(dt, this.enemies, this.projectiles);
         }
-        for (const e of this.enemies) e.update(dt);
-        this.enemies = this.enemies.filter((e) => e.alive);
-        this.projectiles = this.projectiles.filter((p) => p.alive);
-        for (const p of this.projectiles) p.update(dt);
+        // Loop backwards to allow for safe removal during iteration
+        for (let i = this.enemies.length - 1; i >= 0; i--) {
+            const enemy = this.enemies[i];
+            enemy.update(dt);
+            if (!enemy.alive) {
+                this.enemies.splice(i, 1);
+            }
+        }
+
+        // Do the same for projectiles
+        for (let i = this.projectiles.length - 1; i >= 0; i--) {
+            const projectile = this.projectiles[i];
+            projectile.update(dt);
+            if (!projectile.alive) {
+                this.projectiles.splice(i, 1);
+            }
+        }
     }
 
     reset() {

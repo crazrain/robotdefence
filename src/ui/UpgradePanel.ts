@@ -93,20 +93,37 @@ export class UpgradePanel {
             .on('pointerout', () => buttonBg.fillStyle(parseInt(THEME.neutral.substring(1), 16), 1).fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 8));
     }
 
-    public updateInfo(upgradeInfos: Record<RarityGroup, UpgradeInfo>) {
+    public updateInfo(upgradeInfos: Record<RarityGroup, UpgradeInfo & { isMax: boolean }>) {
         this.container.each((child: Phaser.GameObjects.GameObject) => {
             if (child instanceof Phaser.GameObjects.Container && child.getData('rarityGroup')) {
-                const rarityGroup = child.getData('rarityGroup') as RarityGroup;
+                const buttonContainer = child;
+                const rarityGroup = buttonContainer.getData('rarityGroup') as RarityGroup;
                 const info = upgradeInfos[rarityGroup];
-                const infoText = child.getData('infoText') as Phaser.GameObjects.Text;
-                infoText.setText(`레벨: ${info.level} | 비용: ${info.cost}G`);
+                const infoText = buttonContainer.getData('infoText') as Phaser.GameObjects.Text;
+                const buttonBg = buttonContainer.getAt(0) as Phaser.GameObjects.Graphics;
+                const buttonWidth = 400;
+                const buttonHeight = 60;
+
+                if (info.isMax) {
+                    infoText.setText('레벨: MAX');
+                    buttonContainer.disableInteractive();
+                    buttonBg.fillStyle(0x555555, 0.8);
+                    buttonBg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 8);
+                } else {
+                    infoText.setText(`레벨: ${info.level} | 비용: ${info.cost}G`);
+                    buttonContainer.setInteractive({ useHandCursor: true });
+                    buttonBg.fillStyle(parseInt(THEME.neutral.substring(1), 16), 1);
+                    buttonBg.fillRoundedRect(-buttonWidth / 2, -buttonHeight / 2, buttonWidth, buttonHeight, 8);
+                }
             }
         });
     }
 
     public show(upgradeInfos: Record<RarityGroup, UpgradeInfo>) {
-        this.updateInfo(upgradeInfos);
         this.container.setVisible(true);
+        this.scene.time.delayedCall(1, () => {
+            this.updateInfo(upgradeInfos);
+        });
     }
 
     public hide() {
