@@ -42,9 +42,9 @@ export class FireZone extends Phaser.GameObjects.Zone {
             alpha: { start: 1, end: 0, ease: 'Quad.easeIn' },
             lifespan: { min: 500, max: 1000 },
             quantity: 1,
-            blendMode: 'SCREEN',
-            emitZone: { type: 'random', source: new Phaser.Geom.Circle(x, y, radius), quantity: 10 },
-            tint: [0xff4500, 0xff6347, 0xdc143c] // OrangeRed, Tomato, Crimson
+            blendMode: 'NORMAL',
+            emitZone: { type: 'random', source: new Phaser.Geom.Circle(x, y, radius), quantity: 7 },
+            tint: [0xff4500, 0xff0000, 0x8b0000] // OrangeRed, Red, DarkRed
         });
 
         // Destroy the zone after its duration
