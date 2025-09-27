@@ -35,14 +35,16 @@ export class FireZone extends Phaser.GameObjects.Zone {
         this.drawZone(radius);
 
         this.particleEmitter = scene.add.particles(0, 0, 'star_particle', {
-            speed: { min: 5, max: 20 },
-            angle: { min: 0, max: 360 },
-            scale: { start: 0.6, end: 0 },
-            lifespan: { min: 400, max: 800 },
-            quantity: 2,
-            blendMode: 'ADD',
-            emitZone: { type: 'random', source: new Phaser.Geom.Circle(x, y, radius), quantity: 20 },
-            tint: [0xff8800, 0xff0000, 0xffff00]
+            speedY: { min: -10, max: -30 },
+            speedX: { min: -10, max: 10 },
+            gravityY: -50,
+            scale: { start: 0.1, end: 0.5, ease: 'Quad.easeOut' },
+            alpha: { start: 1, end: 0, ease: 'Quad.easeIn' },
+            lifespan: { min: 500, max: 1000 },
+            quantity: 1,
+            blendMode: 'SCREEN',
+            emitZone: { type: 'random', source: new Phaser.Geom.Circle(x, y, radius), quantity: 10 },
+            tint: [0xff4500, 0xff6347, 0xdc143c] // OrangeRed, Tomato, Crimson
         });
 
         // Destroy the zone after its duration
