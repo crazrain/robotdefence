@@ -53,5 +53,62 @@ export const SKILLS_DATA: Skill[] = [
                 }
             }
         ]
+    },
+    {
+        id: 'scorchedEarth',
+        name: 'Scorched Earth',
+        maxLevel: 5,
+        levels: [
+            {
+                level: 1,
+                description: '피격 지점에 3초 동안 초당 5의 피해를 주는 불타는 지역을 생성합니다. (범위: 50)',
+                properties: {
+                    duration: 3,
+                    damage: 5,
+                    radius: 50,
+                    tickInterval: 1000
+                }
+            },
+            {
+                level: 2,
+                description: '피격 지점에 3.5초 동안 초당 10의 피해를 주는 불타는 지역을 생성합니다. (범위: 55)',
+                properties: {
+                    duration: 3.5,
+                    damage: 10,
+                    radius: 55,
+                    tickInterval: 1000
+                }
+            },
+            {
+                level: 3,
+                description: '피격 지점에 4초 동안 초당 15의 피해를 주는 불타는 지역을 생성합니다. (범위: 60)',
+                properties: {
+                    duration: 4,
+                    damage: 15,
+                    radius: 60,
+                    tickInterval: 1000
+                }
+            },
+            {
+                level: 4,
+                description: '피격 지점에 4.5초 동안 초당 20의 피해를 주는 불타는 지역을 생성합니다. (범위: 65)',
+                properties: {
+                    duration: 4.5,
+                    damage: 20,
+                    radius: 65,
+                    tickInterval: 1000
+                }
+            },
+            {
+                level: 5,
+                description: '피격 지점에 5초 동안 초당 25의 피해를 주는 불타는 지역을 생성합니다. (범위: 70)',
+                properties: {
+                    duration: 5,
+                    damage: 25,
+                    radius: 70,
+                    tickInterval: 1000
+                }
+            }
+        ]
     }
 ];

@@ -23,7 +23,7 @@ export interface HeroData {
 }
 
 export const HEROES_DATA: HeroData[] = [
-  { id: 0, name: 'Warrior', imageKey: 'Basic1', assetPath: 'assets/images/Basic1.png', fireEffect: 'assets/images/Basic_Effect.png', fireSound: 'assets/sounds/Basic_Sound.mp3', type: 'TypeA', atkInterval: 1.0, attackSpeed: 1.0, range: 200, skills: [{ skillId: 'berserk', level: 1 }] },
+  { id: 0, name: 'Warrior', imageKey: 'Basic1', assetPath: 'assets/images/Basic1.png', fireEffect: 'assets/images/Basic_Effect.png', fireSound: 'assets/sounds/Basic_Sound.mp3', type: 'TypeA', atkInterval: 1.0, attackSpeed: 1.0, range: 200, skills: [{ skillId: 'berserk', level: 1 }, { skillId: 'scorchedEarth', level: 1 }] },
   { id: 1, name: 'Knight', imageKey: 'Basic2', assetPath: 'assets/images/Basic2.png', fireEffect: 'assets/images/Basic_Effect.png', fireSound: 'assets/sounds/Basic_Sound.mp3', type: 'TypeA', atkInterval: 0.1, attackSpeed: 10.0, range: 190, skills: [] },
   { id: 2, name: 'Paladin', imageKey: 'Basic3', assetPath: 'assets/images/Basic3.png', fireEffect: 'assets/images/Basic_Effect.png', fireSound: 'assets/sounds/Basic_Sound.mp3', type: 'TypeA', atkInterval: 3.0, attackSpeed: 0.33, range: 210, skills: [{ skillId: 'berserk', level: 1 }] },
   { id: 3, name: 'Mage', imageKey: 'Rare1', assetPath: 'assets/images/Rare1.png', fireEffect: 'assets/images/Rare_Effect.png', fireSound: 'assets/sounds/Rare_Sound.mp3', type: 'TypeB', atkInterval: 1.0, attackSpeed: 1.0, range: 220, skills: [{ skillId: 'berserk', level: 1 }] },

@@ -5,11 +5,14 @@ import { Unit } from '../objects/Unit';
 import { Projectile } from '../objects/Projectile';
 import { Hero } from '../objects/Hero';
 
+import { FireZone } from '../objects/FireZone';
+
 export class EntityManager {
     public enemies: Enemy[] = [];
     public units: Unit[] = [];
     public projectiles: Projectile[] = [];
     public heroes: Hero[] = [];
+    public fireZones: FireZone[] = [];
 
     constructor(private scene: GameScene) {}
 
@@ -22,6 +25,7 @@ export class EntityManager {
         this.enemies = this.enemies.filter((e) => e.alive);
         this.projectiles = this.projectiles.filter((p) => p.alive);
         for (const p of this.projectiles) p.update(dt);
+        this.fireZones = this.fireZones.filter(fz => fz.active);
     }
 
     reset() {
@@ -29,10 +33,12 @@ export class EntityManager {
         this.enemies.forEach((e) => e.destroy());
         this.projectiles.forEach((p) => p.destroy());
         this.heroes.forEach(h => h.destroy());
+        this.fireZones.forEach(fz => fz.destroy());
         this.units.length = 0;
         this.enemies.length = 0;
         this.projectiles.length = 0;
         this.heroes.length = 0;
+        this.fireZones.length = 0;
     }
 
     addHero(hero: Hero) {
@@ -45,5 +51,10 @@ export class EntityManager {
             this.heroes.splice(index, 1);
         }
         hero.destroy();
+    }
+
+    addFireZone(x: number, y: number, radius: number, duration: number, damage: number, tickInterval: number) {
+        const fireZone = new FireZone(this.scene, x, y, radius, duration, damage, tickInterval, this);
+        this.fireZones.push(fireZone);
     }
 }

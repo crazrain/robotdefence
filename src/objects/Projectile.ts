@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { Enemy } from './Enemy';
 
+import { Hero } from './Hero';
+import { GameScene } from '../scenes/GameScene';
+
 export class Projectile extends Phaser.GameObjects.Image {
     dmg: number;
     speed: number;
@@ -8,8 +11,9 @@ export class Projectile extends Phaser.GameObjects.Image {
     vy = 0;
     alive = true;
     target?: Enemy;
+    hero: Hero;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, dmg: number, speed: number, target: Enemy | undefined, textureKey: string, color?: number) {
+    constructor(scene: Phaser.Scene, x: number, y: number, dmg: number, speed: number, target: Enemy | undefined, textureKey: string, hero: Hero, color?: number) {
         super(scene, x, y, textureKey);
         
         if (!scene.textures.exists(textureKey)) {
@@ -29,6 +33,7 @@ export class Projectile extends Phaser.GameObjects.Image {
         this.dmg = dmg;
         this.speed = speed;
         this.target = target;
+        this.hero = hero;
     }
 
     update(dt: number) {
@@ -38,6 +43,12 @@ export class Projectile extends Phaser.GameObjects.Image {
             const dist = Math.hypot(dx, dy);
             if (dist < 8) {
                 this.target.takeDamage(this.dmg);
+
+                const scorchedEarthSkill = this.hero.skills.find(s => s.skillId === 'scorchedEarth');
+                if (scorchedEarthSkill && scorchedEarthSkill.level > 0) {
+                    (this.scene as GameScene).skillManager.activateScorchedEarth(this.x, this.y, scorchedEarthSkill.level);
+                }
+
                 this.alive = false;
                 this.destroy();
                 return;

@@ -28,4 +28,15 @@ export class SkillManager {
             this.scene.uiManager.toast.show(`골드가 부족합니다! (필요: ${SKILL_UPGRADE_COST})`, THEME.danger);
         }
     }
+
+    activateScorchedEarth(x: number, y: number, skillLevel: number) {
+        const skillData = SKILLS_DATA.find(s => s.id === 'scorchedEarth');
+        if (!skillData) return;
+
+        const levelData = skillData.levels[skillLevel - 1];
+        if (!levelData) return;
+
+        const { radius, duration, damage, tickInterval } = levelData.properties;
+        this.scene.entityManager.addFireZone(x, y, radius, duration, damage, tickInterval);
+    }
 }

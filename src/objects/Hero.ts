@@ -302,7 +302,7 @@ export class Hero extends Phaser.GameObjects.Image {
         });
 
         const projectileTexture = this.getProjectileTexture();
-        const p = new Projectile(this.scene, fireX, fireY, this.atk, 600, target, projectileTexture, this.getRankBackgroundColor());
+        const p = new Projectile(this.scene, fireX, fireY, this.atk, 600, target, projectileTexture, this, this.getRankBackgroundColor());
         const dx = target.x - fireX, dy = target.y - fireY;
         const dist = Math.hypot(dx, dy) || 1;
         p.vx = (dx / dist) * 600;
