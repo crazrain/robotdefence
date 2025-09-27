@@ -32,7 +32,7 @@ export class FireZone extends Phaser.GameObjects.Zone {
         this.entityManager = entityManager;
 
         this.graphic = scene.add.graphics();
-        this.drawZone(radius);
+        // this.drawZone(radius);
 
         this.particleEmitter = scene.add.particles(0, 0, 'star_particle', {
             speedY: { min: -10, max: -30 },
@@ -62,9 +62,9 @@ export class FireZone extends Phaser.GameObjects.Zone {
     }
 
     private drawZone(radius: number) {
-        this.graphic.clear();
-        this.graphic.fillStyle(0xff0000, 0.3);
-        this.graphic.fillCircle(this.x, this.y, radius);
+        // this.graphic.clear();
+        // this.graphic.fillStyle(0xff0000, 0.3);
+        // this.graphic.fillCircle(this.x, this.y, radius);
     }
 
     private applyDamage() {
