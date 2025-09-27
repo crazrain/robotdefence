@@ -10,6 +10,7 @@ export class FireZone extends Phaser.GameObjects.Zone {
     private entityManager: EntityManager;
     private graphic: Phaser.GameObjects.Graphics;
     private damageTimer: Phaser.Time.TimerEvent;
+    private particleEmitter: Phaser.GameObjects.Particles.ParticleEmitter;
 
     constructor(
         scene: Phaser.Scene,
@@ -32,6 +33,17 @@ export class FireZone extends Phaser.GameObjects.Zone {
 
         this.graphic = scene.add.graphics();
         this.drawZone(radius);
+
+        this.particleEmitter = scene.add.particles(0, 0, 'star_particle', {
+            speed: { min: 5, max: 20 },
+            angle: { min: 0, max: 360 },
+            scale: { start: 0.6, end: 0 },
+            lifespan: { min: 400, max: 800 },
+            quantity: 2,
+            blendMode: 'ADD',
+            emitZone: { type: 'random', source: new Phaser.Geom.Circle(x, y, radius), quantity: 20 },
+            tint: [0xff8800, 0xff0000, 0xffff00]
+        });
 
         // Destroy the zone after its duration
         scene.time.delayedCall(this.duration, () => {
@@ -69,6 +81,7 @@ export class FireZone extends Phaser.GameObjects.Zone {
     destroy(fromScene?: boolean) {
         this.damageTimer.destroy();
         this.graphic.destroy();
+        this.particleEmitter.destroy();
         super.destroy(fromScene);
     }
 }
