@@ -46,6 +46,7 @@ export class Projectile extends Phaser.GameObjects.Image {
 
                 const scorchedEarthSkill = this.hero.skills.find(s => s.skillId === 'scorchedEarth');
                 if (scorchedEarthSkill && scorchedEarthSkill.level > 0) {
+                    console.log(`Scorched Earth activated! Level: ${scorchedEarthSkill.level}`);
                     (this.scene as GameScene).skillManager.activateScorchedEarth(this.x, this.y, scorchedEarthSkill.level);
                 }
 

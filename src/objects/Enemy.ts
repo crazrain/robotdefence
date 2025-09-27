@@ -3,6 +3,8 @@ import type { Vec2 } from '../core/types';
 import { GOLD_PER_HP } from '../core/constants';
 
 export class Enemy extends Phaser.GameObjects.Arc {
+    private static nextId = 0;
+    public id: number;
     hp: number;
     maxHp: number;
     speed: number;
@@ -13,6 +15,7 @@ export class Enemy extends Phaser.GameObjects.Arc {
 
     constructor(scene: Phaser.Scene, x: number, y: number, waypoints: Vec2[], hp: number, speed: number, wpIndexAtJoin: number, radius: number, hpScale: number) {
         super(scene, x, y, radius, 0, 360, false);
+        this.id = Enemy.nextId++;
         scene.add.existing(this);
         scene.physics.add.existing(this);
         (this.body as Phaser.Physics.Arcade.Body).setCircle(radius).setOffset(-radius, -radius);

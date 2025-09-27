@@ -61,6 +61,7 @@ export class FireZone extends Phaser.GameObjects.Zone {
                 enemy.getBounds()
             )) {
                 enemy.takeDamage(this.damage);
+                console.log(`Enemy ${enemy.id} took ${this.damage} damage from Scorched Earth.`);
             }
         }
     }
